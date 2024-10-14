@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">施開錠アプリ</string>
+    <string name="lock_settings">デバイス設定一覧</string>
+    <string name="setting_select">デバイス設定選択</string>
+    <string name="registered_locks">登録デバイス一覧</string>
+    <string name="search_locks">デバイスを追加する</string>
+    <string name="add_setting">デバイス設定を追加する</string>
+    <string name="control_locks">デバイスを施錠・開錠する</string>
+    <string name="permission_title">パーミッションが必要です</string>
+    <string name="permission_message">この機能を使用するには、位置情報のパーミッションが必要です。設定画面から許可してください。</string>
+    <string name="permission_positive_button">設定を開く</string>
+    <string name="cancel">キャンセル</string>
+    <string name="save">SAVE</string>
+    <string name="save_done">保存が完了しました</string>
+    <string name="connect">CONNECT</string>
+    <string name="unlock">開錠</string>
+    <string name="lock">施錠</string>
+    <string name="api_key">API Key</string>
+    <string name="lock_name">ロック名：</string>
+    <string name="lock_position">施錠角度：0〜360°で入力してください</string>
+    <string name="unlock_position">解錠角度：0〜360°で入力してください</string>
+    <string name="navigation_drawer_open">ナビゲーションメニューを開く</string>
+    <string name="navigation_drawer_close">ナビゲーションメニューを閉じる</string>
+    <string name="option_button">設定変更</string>
+    <string name="lock_state">ロックの状態：</string>
+    <string name="setting_button_title">設定変更</string>
+    <string name="guide_text">右下のボタンで\nデバイス登録\nしましょう</string>
+    <string name="title_activity_base">BaseActivity</string>
+    <string name="error_icon_description">エラー発生</string>
+    <string name="back_to_top">Topへ戻る</string>
+    <string name="back_to_previous">前画面へ戻る</string>
+</resources>
