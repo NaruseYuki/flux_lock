@@ -9,9 +9,11 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import co.candyhouse.sesame.open.device.CHDevices
+import com.yushin.flux_lock.R
 import com.yushin.flux_lock.utils.Utils.addTo
 import com.yushin.flux_lock.adapter.BLEAdapter
 import com.yushin.flux_lock.databinding.FragmentUnregisteredDevicesBinding
+import com.yushin.flux_lock.view.BLEActivity
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 
@@ -59,6 +61,10 @@ class UnregisterDevicesFragment : BaseFragment() {
     private fun onDeviceClicked(device: CHDevices) {
         Log.d("UnregisterDevicesFragment", "onDeviceClicked: $device")
         // 接続を実行する
-        bleActionCreator.connectDevice(device)
+        bleActionCreator.firstConnectDevice(device)
+//        (activity as BLEActivity).navigateFragment(
+//            R.id.container_main_fragment,
+//            UnregisterDevicesFragment() // 名前の設定画面へ
+//        )
     }
 }
