@@ -14,7 +14,7 @@ import javax.inject.Singleton
 
 @Singleton
 class BLEStore @Inject constructor(
-    private val bleDispatcher: BLEDispatcher
+    private val bleDispatcher:BLEDispatcher
 ) {
     // 未登録デバイス
     private val unRegisteredDevices = mutableListOf<CHDevices>()
@@ -37,24 +37,33 @@ class BLEStore @Inject constructor(
 
     init {
         bleDispatcher.onAction()
-            .subscribe { action ->
-                when (action) {
-                    is BLEAction.StartLoading -> startLoading()
-                    is BLEAction.FinishLoading -> finishLoading()
-                    is BLEAction.LoadUnregisteredDevices -> loadUnregisteredDevices(action.devices)
-                    is BLEAction.LoadRegisteredDevices -> loadRegisteredDevices(action.devices)
-                    is BLEAction.ScanDevices -> scanDevices()
-                    is BLEAction.StopScanDevices -> stopScanDevices()
-                    is BLEAction.ConnectDevice -> connectDevice(action.device)
-                    is BLEAction.SendUserConfig -> sendUserConfig()
-                    is BLEAction.LockDevice -> lockDevice()
-                    is BLEAction.UnlockDevice -> unlockDevice()
-                    is BLEAction.CheckDeviceStatus -> checkDeviceStatus()
-                    is BLEAction.RegisterDevice -> registerDevice()
-                    is BLEAction.ChangeBleStatus -> changeBleStatus(action.status)
-                    is BLEAction.Toggle -> toggle(action.device)
-                }
+            .subscribe {
+                action -> on(action)
             }.addTo(disposables)
+    }
+
+    private fun on(action: BLEAction) {
+        when (action) {
+            is BLEAction.StartLoading -> startLoading()
+            is BLEAction.FinishLoading -> finishLoading()
+            is BLEAction.LoadUnregisteredDevices -> loadUnregisteredDevices(action.devices)
+            is BLEAction.LoadRegisteredDevices -> loadRegisteredDevices(action.devices)
+            is BLEAction.ScanDevices -> scanDevices()
+            is BLEAction.StopScanDevices -> stopScanDevices()
+            is BLEAction.ConnectDevice -> connectDevice(action.device)
+            is BLEAction.SendUserConfig -> sendUserConfig()
+            is BLEAction.LockDevice -> lockDevice()
+            is BLEAction.UnlockDevice -> unlockDevice()
+            is BLEAction.CheckDeviceStatus -> checkDeviceStatus()
+            is BLEAction.RegisterDevice -> registerDevice()
+            is BLEAction.ChangeBleStatus -> changeBleStatus(action.status)
+            is BLEAction.Toggle -> toggle(action.device)
+            is BLEAction.DisconnectDevice ->disconnectDevice(action.device)
+        }
+    }
+
+    private fun disconnectDevice(device: CHDevices) {
+        Log.d("BLE", "disconnect: $device")
     }
 
     private fun toggle(device: CHDevices) {
@@ -110,10 +119,9 @@ class BLEStore @Inject constructor(
     Log.d("BLE", "finished stopScanDevices")
     }
 
-    fun onDestroy(){
+     fun onDestroy(){
         disposables.dispose()
     }
-
     private fun startLoading() {
         loadingSubject.onNext(true)
     }

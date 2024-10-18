@@ -49,19 +49,22 @@ class BLEActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        
-        // DB読み込みが完了したらフラグメントを表示するよう購読
-        displayElements()
     }
+
 
     override fun onResume() {
         super.onResume()
         if(disposable.isDisposed){
             disposable = CompositeDisposable()
         }
+        // DB読み込みが完了したらフラグメントを表示するよう購読
+        displayElements()
         if(!requestFlg){
             checkPermissions()
         }
+        // 初期データをロードする
+        bleActionCreator.loadRegisteredDevices()
+
     }
 
     override fun onPause() {
@@ -72,7 +75,9 @@ class BLEActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        bleStore.getConnectedDevice().value?.let { bleActionCreator.disconnect(it) }
         // disposableを破棄
+        bleStore.onDestroy()
         disposable.dispose()
         super.onDestroy()
     }
@@ -137,9 +142,6 @@ class BLEActivity : AppCompatActivity() {
 
     private fun checkPermissions() {
         if (hasBluetoothPermissions()) {
-            // 初期データをロードする
-            bleActionCreator.loadRegisteredDevices()
-            
             // パーミッションが許可されている場合の処理
             // デバイスの購読処理を行う
             //subscribeDevices()

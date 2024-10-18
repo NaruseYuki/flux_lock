@@ -9,7 +9,6 @@ import co.candyhouse.sesame.open.device.CHDeviceStatusDelegate
 import co.candyhouse.sesame.open.device.CHDevices
 import co.candyhouse.sesame.open.device.CHSesame2
 import co.candyhouse.sesame.open.device.CHSesame5
-import co.candyhouse.sesame.open.device.CHSesameLock
 import com.yushin.flux_lock.action.BLEAction
 import com.yushin.flux_lock.dispatcher.BLEDispatcher
 import javax.inject.Inject
@@ -42,8 +41,11 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                  登録名を保存する
                  */
                 dispatcher.dispatch(BLEAction.LoadRegisteredDevices(it.data))
+                dispatcher.dispatch(BLEAction.FinishLoading)
             }
-            dispatcher.dispatch(BLEAction.FinishLoading)
+            it.onFailure {
+                dispatcher.dispatch(BLEAction.FinishLoading)
+            }
         }
     }
 
@@ -59,6 +61,28 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
         CHBleManager.disableScan {
             dispatcher.dispatch(BLEAction.StopScanDevices)
         }
+    }
+
+    // デバイス接続アクションを生成し、ディスパッチ
+    fun firstConnectDevice(device:CHDevices) {
+        device.connect{
+            it.onSuccess {
+                Log.d("BLE", "device connected: $it")
+                dispatcher.dispatch(BLEAction.ConnectDevice(device))
+            }
+            it.onFailure {
+                Log.d("BLE", "device connect failed: $it")
+            }
+        }
+        device.delegate = object : CHDeviceStatusDelegate {
+            override fun onBleDeviceStatusChanged(device: CHDevices, status: CHDeviceStatus, shadowStatus: CHDeviceStatus?) {
+                if (status == CHDeviceStatus.ReadyToRegister) {
+                    registerDevice(device)
+                }
+                dispatcher.dispatch(BLEAction.ChangeBleStatus(status))
+            }
+        }
+
     }
 
     // デバイス接続アクションを生成し、ディスパッチ
@@ -86,8 +110,17 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
 
     // デバイスの状態確認アクションを生成し、ディスパッチ
     // TODO: 必要な引数を決定する
-    fun checkDeviceStatus() {
-        dispatcher.dispatch(BLEAction.CheckDeviceStatus)
+    fun disconnect(device:CHDevices) {
+        device.disconnect {
+            it.onSuccess {
+                Log.d("BLE", "device disconnected: $it")
+                dispatcher.dispatch(BLEAction.DisconnectDevice(device))
+            }
+            it.onFailure {
+                Log.d("BLE", "device disconnect failed: $it")
+                dispatcher.dispatch(BLEAction.DisconnectDevice(device))
+            }
+        }
     }
 
     // デバイス名を登録するアクションを生成し、ディスパッチ
@@ -108,9 +141,6 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
     private fun subscribeDeviceStatus(device: CHDevices) {
         device.delegate = object : CHDeviceStatusDelegate {
             override fun onBleDeviceStatusChanged(device: CHDevices, status: CHDeviceStatus, shadowStatus: CHDeviceStatus?) {
-                if (status == CHDeviceStatus.ReadyToRegister) {
-                    registerDevice(device)
-                }
                 if(status == CHDeviceStatus.ReceivedAdV){
                     device.connect{
                         it.onSuccess {

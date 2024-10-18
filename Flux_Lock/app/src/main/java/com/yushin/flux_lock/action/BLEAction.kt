@@ -55,4 +55,6 @@ sealed class BLEAction {
 
     data class ChangeBleStatus(val status: CHDeviceStatus):BLEAction()
 
+    data class DisconnectDevice(val device: CHDevices) : BLEAction()
+
 }

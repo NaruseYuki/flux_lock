@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import com.yushin.flux_lock.R
 import com.yushin.flux_lock.databinding.FragmentNoDevicesBinding
 import com.yushin.flux_lock.view.BLEActivity
+import io.reactivex.rxjava3.disposables.CompositeDisposable
 
 class NoDevicesFragment : BaseFragment() {
     private lateinit var binding: FragmentNoDevicesBinding
@@ -27,5 +28,10 @@ class NoDevicesFragment : BaseFragment() {
                 UnregisterDevicesFragment()
             )
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        disposable = CompositeDisposable()
     }
 }
