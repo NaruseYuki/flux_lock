@@ -31,9 +31,7 @@ class SettingDeviceFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        //TODO:接続しているデバイス情報を参照する
         val deviceData = bleStore.getConnectedDevice().value
-        // TODO:デバイス情報をテキストボックスに入力する
         val deviceName = deviceData?.productModel?.deviceModelName().toString()
 
         val items: List<ViewTypeCell> = listOf(
