@@ -3,6 +3,7 @@ package com.yushin.flux_lock.store
 import android.util.Log
 import co.candyhouse.sesame.open.device.CHDeviceStatus
 import co.candyhouse.sesame.open.device.CHDevices
+import co.candyhouse.sesame.open.device.CHSesame5
 import com.yushin.flux_lock.action.BLEAction
 import com.yushin.flux_lock.dispatcher.BLEDispatcher
 import com.yushin.flux_lock.utils.Utils.addTo
@@ -26,6 +27,9 @@ class BLEStore @Inject constructor(
 
     // 接続デバイス
     private val connectedSubject = BehaviorSubject.create<CHDevices?>()
+
+    // デバイスの角度
+    val angleSubject = BehaviorSubject.create<MutableList<Short?>>()
 
     // デバイスステータス
     val bleStatusSubject = BehaviorSubject.create<CHDeviceStatus>()
@@ -54,7 +58,7 @@ class BLEStore @Inject constructor(
             is BLEAction.SendUserConfig -> sendUserConfig()
             is BLEAction.LockDevice -> lockDevice()
             is BLEAction.UnlockDevice -> unlockDevice()
-            is BLEAction.CheckDeviceStatus -> checkDeviceStatus()
+            is BLEAction.CheckDeviceStatus -> checkDeviceStatus(action.device)
             is BLEAction.RegisterDevice -> registerDevice()
             is BLEAction.ChangeBleStatus -> changeBleStatus(action.status)
             is BLEAction.Toggle -> toggle(action.device)
@@ -90,8 +94,13 @@ class BLEStore @Inject constructor(
 
     }
 
-    private fun checkDeviceStatus() {
-        TODO("Not yet implemented")
+    private fun checkDeviceStatus(device: CHDevices) {
+        val list = mutableListOf(
+            (device as? CHSesame5)?.mechSetting?.lockPosition,
+            (device as? CHSesame5)?.mechSetting?.unlockPosition,
+            (device as? CHSesame5)?.mechSetting?.autoLockSecond
+        )
+        angleSubject.onNext(list)
     }
 
     private fun unlockDevice() {
@@ -142,5 +151,8 @@ class BLEStore @Inject constructor(
 
     // 接続デバイスを取得する
     fun getConnectedDevice() = connectedSubject
+
+    // 角度設定を取得する
+    fun getAngleList() = angleSubject
 
 }

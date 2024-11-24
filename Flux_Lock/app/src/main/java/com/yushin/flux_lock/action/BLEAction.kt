@@ -47,8 +47,7 @@ sealed class BLEAction {
     data object UnlockDevice:BLEAction()
 
     // デバイスの状態を確認する
-    // TODO:引数のクラスを決定する
-    data object CheckDeviceStatus:BLEAction()
+    data class CheckDeviceStatus(val device: CHDevices) : BLEAction()
 
     // デバイスをDBに登録する
     data object RegisterDevice:BLEAction()

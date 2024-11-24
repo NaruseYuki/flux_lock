@@ -16,7 +16,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 
-@AndroidEntryPoint
 class ControlDeviceFragment : BaseFragment() {
     private lateinit var binding: FragmentControlDeviceBinding
 
@@ -31,6 +30,7 @@ class ControlDeviceFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         addDevicesListener()
+        editDeviceSetting()
         setLockImageListener()
     }
 
@@ -103,6 +103,16 @@ class ControlDeviceFragment : BaseFragment() {
             (activity as BLEActivity).navigateFragment(
                 R.id.container_main_fragment,
                 UnregisterDevicesFragment()
+            )
+        }
+    }
+
+    private fun editDeviceSetting(){
+        // EditDeviceSettingFragmentを表示する
+        binding.settingButton.setOnClickListener {
+            (activity as BLEActivity).navigateFragment(
+                R.id.container_main_fragment,
+                SettingDeviceFragment()
             )
         }
     }

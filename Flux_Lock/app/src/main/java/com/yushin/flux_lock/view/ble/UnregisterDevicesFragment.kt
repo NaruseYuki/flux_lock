@@ -14,6 +14,7 @@ import com.yushin.flux_lock.utils.Utils.addTo
 import com.yushin.flux_lock.adapter.BLEAdapter
 import com.yushin.flux_lock.databinding.FragmentUnregisteredDevicesBinding
 import com.yushin.flux_lock.view.BLEActivity
+import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 
@@ -62,9 +63,9 @@ class UnregisterDevicesFragment : BaseFragment() {
         Log.d("UnregisterDevicesFragment", "onDeviceClicked: $device")
         // 接続を実行する
         bleActionCreator.firstConnectDevice(device)
-//        (activity as BLEActivity).navigateFragment(
-//            R.id.container_main_fragment,
-//            UnregisterDevicesFragment() // 名前の設定画面へ
-//        )
+        (activity as BLEActivity).navigateFragment(
+            R.id.container_main_fragment,
+            SettingDeviceFragment() // 名前の設定画面へ
+        )
     }
 }

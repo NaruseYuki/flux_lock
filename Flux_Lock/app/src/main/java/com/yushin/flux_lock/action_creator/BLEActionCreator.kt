@@ -153,6 +153,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                     }
                 }
                 dispatcher.dispatch(BLEAction.ChangeBleStatus(status))
+                dispatcher.dispatch(BLEAction.CheckDeviceStatus(device))
             }
         }
     }

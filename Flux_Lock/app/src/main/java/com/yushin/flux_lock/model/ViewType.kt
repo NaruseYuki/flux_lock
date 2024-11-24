@@ -1,0 +1,28 @@
+package com.yushin.flux_lock.model
+
+import com.yushin.flux_lock.R
+
+sealed class ViewTypeCell {
+    data class TitleText(val text: String) : ViewTypeCell()
+    data class EditText(val text: String) : ViewTypeCell()
+    data object AngleView : ViewTypeCell()
+}
+
+sealed class ViewType(val layoutId:Int) {
+    data object Key:ViewType(R.layout.setting_item_title_cell)
+    data object Value:ViewType(R.layout.setting_item_cell)
+    data object Angle:ViewType(R.layout.setting_angle_cell)
+
+    companion object {
+        fun fromCell(cell: ViewTypeCell): ViewType {
+            return when (cell) {
+                is ViewTypeCell.TitleText -> Key
+                is ViewTypeCell.EditText -> Value
+                is ViewTypeCell.AngleView -> Angle
+            }
+        }
+    }
+}
+
+
+
