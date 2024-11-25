@@ -22,6 +22,7 @@ import dagger.assisted.AssistedInject
 
 
 class MultiLayoutRecyclerAdapter
+// 正直hiltはここではいらないが、使ってみたかったので入れてみる
 @AssistedInject constructor(
     @Assisted private val items: List<ViewTypeCell>,
     @Assisted private val device: CHDevices // Assistedで外部から渡される引数
@@ -75,7 +76,6 @@ class MultiLayoutRecyclerAdapter
         items.forEachIndexed { index, it ->
             if (it is ViewTypeCell.AngleView) {
                 it.device = device // ViewTypeCell.AngleViewにデバイス情報を持たせる
-
                 notifyItemChanged(index)
             }
         }
