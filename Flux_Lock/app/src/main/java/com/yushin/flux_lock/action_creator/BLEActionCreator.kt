@@ -153,6 +153,10 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                     }
                 }
                 dispatcher.dispatch(BLEAction.ChangeBleStatus(status))
+            }
+
+            override fun onMechStatus(device: CHDevices) {
+                super.onMechStatus(device)
                 dispatcher.dispatch(BLEAction.CheckDeviceStatus(device))
             }
         }

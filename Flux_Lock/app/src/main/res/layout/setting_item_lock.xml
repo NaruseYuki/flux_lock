@@ -1,0 +1,10 @@
+<Button
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/lock_position"
+    android:layout_width="160dp"
+    android:layout_height="wrap_content"
+    android:textColor="@color/white"
+    android:textSize="16sp"
+    android:text="@string/lock_position_text"
+    android:backgroundTint="@color/design_default_color_secondary_variant"
+    />

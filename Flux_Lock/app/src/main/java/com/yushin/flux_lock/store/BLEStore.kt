@@ -28,9 +28,6 @@ class BLEStore @Inject constructor(
     // 接続デバイス
     private val connectedSubject = BehaviorSubject.create<CHDevices?>()
 
-    // デバイスの角度
-    val angleSubject = BehaviorSubject.create<MutableList<Short?>>()
-
     // デバイスステータス
     val bleStatusSubject = BehaviorSubject.create<CHDeviceStatus>()
 
@@ -95,12 +92,12 @@ class BLEStore @Inject constructor(
     }
 
     private fun checkDeviceStatus(device: CHDevices) {
-        val list = mutableListOf(
-            (device as? CHSesame5)?.mechSetting?.lockPosition,
-            (device as? CHSesame5)?.mechSetting?.unlockPosition,
-            (device as? CHSesame5)?.mechSetting?.autoLockSecond
-        )
-        angleSubject.onNext(list)
+//        val list = mutableListOf(
+//            (device as? CHSesame5)?.mechSetting?.lockPosition,
+//            (device as? CHSesame5)?.mechSetting?.unlockPosition,
+//            (device as? CHSesame5)?.mechSetting?.autoLockSecond
+//        )
+        connectedSubject.onNext(device)
     }
 
     private fun unlockDevice() {
@@ -151,8 +148,5 @@ class BLEStore @Inject constructor(
 
     // 接続デバイスを取得する
     fun getConnectedDevice() = connectedSubject
-
-    // 角度設定を取得する
-    fun getAngleList() = angleSubject
 
 }

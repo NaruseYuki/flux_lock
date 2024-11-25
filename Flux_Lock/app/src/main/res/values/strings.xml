@@ -31,4 +31,6 @@
     <string name="back_to_previous">前画面へ戻る</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="lock_position_text">施錠位置を設定</string>
+    <string name="unlock_position_text">開錠位置を設定</string>
 </resources>
