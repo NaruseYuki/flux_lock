@@ -80,6 +80,11 @@ class SettingDeviceFragment : BaseFragment() {
                 back()
             }
         )
+        items.add(
+            ViewTypeCell.OKButton(getString(R.string.input_device_setting_back)){
+                back()
+            }
+        )
 
         // Factoryを使ってアダプターを作成
         multiAdapter = adapterFactory.create(items, deviceData,bleActionCreator)
@@ -93,8 +98,6 @@ class SettingDeviceFragment : BaseFragment() {
 
     override fun onResume() {
         super.onResume()
-        disposable = CompositeDisposable()
-
         bleStore.getConnectedDevice()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { device ->

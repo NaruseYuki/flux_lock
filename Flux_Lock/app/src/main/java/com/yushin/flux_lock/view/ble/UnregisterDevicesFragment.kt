@@ -45,7 +45,6 @@ class UnregisterDevicesFragment : BaseFragment() {
 
     override fun onResume() {
         super.onResume()
-        disposable = CompositeDisposable()
         // BLEStoreを監視し、変更があったらUIを更新する
         bleStore.getUnregisteredDevices()
             .skip(1)
@@ -65,7 +64,7 @@ class UnregisterDevicesFragment : BaseFragment() {
         bleActionCreator.firstConnectDevice(device)
         (activity as BLEActivity).navigateFragment(
             R.id.container_main_fragment,
-            SettingDeviceFragment() // 名前の設定画面へ
+            RegisterCompletedFragment() // 名前の設定画面へ
         )
     }
 }

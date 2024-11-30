@@ -30,6 +30,11 @@ open class BaseFragment : Fragment() {
         disposable.clear()
     }
 
+    override fun onResume() {
+        super.onResume()
+        disposable = CompositeDisposable()
+    }
+
      override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
          super.onViewCreated(view, savedInstanceState)
          setOnBackPressed()

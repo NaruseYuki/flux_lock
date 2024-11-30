@@ -36,4 +36,6 @@
     <string name="input_device_button_text">デバイスのつまみを回して、ちょうど良い位置になったら位置設定ボタンを押してください</string>
     <string name="input_device_setting_ok">設定を完了する</string>
     <string name="input_device_setting_complete">設定を完了しました</string>
+    <string name="input_device_setting_back">戻る</string>
+    <string name="register_device_completed">登録完了\nしばらくすると画面が切り替わります</string>
 </resources>

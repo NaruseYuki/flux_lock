@@ -36,7 +36,6 @@ class ControlDeviceFragment : BaseFragment() {
 
     override fun onResume() {
         super.onResume()
-        disposable = CompositeDisposable()
         subscribeDeviceStatus()
         connectFirstDevice()
     }
