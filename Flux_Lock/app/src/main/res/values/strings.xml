@@ -35,4 +35,5 @@
     <string name="input_device_angle_text">デバイスの施錠と解錠の位置を設定してください</string>
     <string name="input_device_button_text">デバイスのつまみを回して、ちょうど良い位置になったら位置設定ボタンを押してください</string>
     <string name="input_device_setting_ok">設定を完了する</string>
+    <string name="input_device_setting_complete">設定を完了しました</string>
 </resources>

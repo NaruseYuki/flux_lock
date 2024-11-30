@@ -16,7 +16,9 @@ import com.yushin.flux_lock.adapter.BLEAdapter
 import com.yushin.flux_lock.adapter.MultiLayoutRecyclerAdapter
 import com.yushin.flux_lock.databinding.FragmentSettingDeviceBinding
 import com.yushin.flux_lock.model.ViewTypeCell
+import com.yushin.flux_lock.utils.SharedPreferencesHelper
 import com.yushin.flux_lock.utils.Utils.addTo
+import com.yushin.flux_lock.viewholder.EditTextViewHolder
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.CompositeDisposable
@@ -27,8 +29,14 @@ class SettingDeviceFragment : BaseFragment() {
     private var recyclerView: RecyclerView? = null
     private lateinit var binding: FragmentSettingDeviceBinding
     @Inject
-    lateinit var adapterFactory: MultiLayoutRecyclerAdapter.Factory
+    private lateinit var adapterFactory: MultiLayoutRecyclerAdapter.Factory
     private lateinit var multiAdapter: MultiLayoutRecyclerAdapter
+    private lateinit var sharedPreferencesHelper: SharedPreferencesHelper
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        sharedPreferencesHelper = SharedPreferencesHelper(requireContext())
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -47,14 +55,9 @@ class SettingDeviceFragment : BaseFragment() {
 
     private fun dispSettingView() {
         val deviceData: CHDevices = bleStore.getConnectedDevice().value ?: return
+        // sharedPrefsからデバイス名を取得
+        val deviceName = deviceData.deviceId?.let { sharedPreferencesHelper.getDeviceName(it) } ?:""
 
-        val deviceName = deviceData.let {
-            when (it) {
-                is CHSesame2 -> it.productModel.deviceModelName()
-                is CHSesame5 -> it.productModel.deviceModelName()
-                else -> ""
-            }
-        }
         val items: List<ViewTypeCell> = listOf(
             ViewTypeCell.TitleText(getString(R.string.input_device_name_text)),
             ViewTypeCell.EditText(deviceName),
@@ -63,7 +66,15 @@ class SettingDeviceFragment : BaseFragment() {
             ViewTypeCell.TitleText(getString(R.string.input_device_button_text)),
             ViewTypeCell.LockButtonRow,
             ViewTypeCell.OKButton(getString(R.string.input_device_setting_ok)){
-                Toast.makeText(requireContext(), "設定が完了しました", Toast.LENGTH_SHORT).show()
+                if(deviceName != (binding.settingRecycler.findViewHolderForAdapterPosition(1)
+                            as EditTextViewHolder).binding.setting.text.toString()){
+                    // sharedPrefsにデバイス名を保存する
+                    deviceData.deviceId?.let { sharedPreferencesHelper.saveDeviceName(it,deviceName) }
+                }
+                Toast.makeText(requireContext(),
+                    getString(R.string.input_device_setting_complete),
+                    Toast.LENGTH_SHORT).show()
+                // 操作画面へ遷移
                 back()
             }
         )
@@ -76,7 +87,6 @@ class SettingDeviceFragment : BaseFragment() {
             adapter = multiAdapter
         }
     }
-
 
     override fun onResume() {
         super.onResume()

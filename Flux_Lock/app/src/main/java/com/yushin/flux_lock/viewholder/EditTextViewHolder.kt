@@ -6,7 +6,7 @@ import com.yushin.flux_lock.databinding.SettingItemCellBinding
 import com.yushin.flux_lock.model.ViewTypeCell
 
 class EditTextViewHolder(
-    private val binding: SettingItemCellBinding
+    val binding: SettingItemCellBinding
 ) : RecyclerView.ViewHolder(binding.root) {
 
     fun bind(data: ViewTypeCell.EditText) {

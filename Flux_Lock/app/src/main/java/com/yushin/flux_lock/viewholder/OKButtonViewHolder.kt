@@ -1,6 +1,5 @@
 package com.yushin.flux_lock.viewholder
 
-import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.yushin.flux_lock.databinding.SettingItemOkButtonBinding
 import com.yushin.flux_lock.model.ViewTypeCell
