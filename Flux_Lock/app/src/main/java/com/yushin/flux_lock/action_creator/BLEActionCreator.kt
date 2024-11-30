@@ -96,7 +96,9 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
     fun configureLockPosition(device: CHDevices,lockState: LockState) {
         if (lockState == LockState.Locked){
             when(device){
-                is CHSesame2 -> device.configureLockPosition(device.mechStatus?.position?:0,device.mechSetting?.unlockPosition?:0){ it ->
+                is CHSesame2 -> device.configureLockPosition(
+                    device.mechStatus?.position?:0,
+                    device.mechSetting?.unlockPosition?:0){ it ->
                     it.onSuccess {
                         Log.d("BLE", "configureLockPosition successes: $it")
                         // 成功したらonMechStatusからパラメータを受け取る
@@ -106,7 +108,9 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                         // TODO 失敗したらエラーを流すようにしたい
                     }
                 }
-                is CHSesame5 -> device.configureLockPosition(device.mechStatus?.position?:0,device.mechSetting?.unlockPosition?:0){
+                is CHSesame5 -> device.configureLockPosition(
+                    device.mechStatus?.position?:0,
+                    device.mechSetting?.unlockPosition?:0){
                     it.onSuccess {
                         Log.d("BLE", "configureLockPosition successes: $it")
                         // 成功したらonMechStatusからパラメータを受け取る
@@ -120,7 +124,9 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
             }
         } else {
             when(device){
-                is CHSesame2 -> device.configureLockPosition(device.mechSetting?.lockPosition?:0,device.mechStatus?.position?:0){ it ->
+                is CHSesame2 -> device.configureLockPosition(
+                    device.mechSetting?.lockPosition?:0,
+                    device.mechStatus?.position?:0){ it ->
                     it.onSuccess {
                         Log.d("BLE", "configureLockPosition successes: $it")
                         // 成功したらonMechStatusからパラメータを受け取る
@@ -130,7 +136,9 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                         // TODO 失敗したらエラーを流すようにしたい
                     }
                 }
-                is CHSesame5 -> device.configureLockPosition(device.mechSetting?.lockPosition?:0,device.mechStatus?.position?:0){
+                is CHSesame5 -> device.configureLockPosition(
+                    device.mechSetting?.lockPosition?:0,
+                    device.mechStatus?.position?:0){
                     it.onSuccess {
                         Log.d("BLE", "configureLockPosition successes: $it")
                         // 成功したらonMechStatusからパラメータを受け取る
@@ -147,20 +155,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
 
     }
 
-    // 施錠操作のアクションを生成し、ディスパッチ
-    // TODO: 必要な引数を決定する
-    fun lockDevice() {
-        dispatcher.dispatch(BLEAction.LockDevice)
-    }
-
-    // 開錠操作のアクションを生成し、ディスパッチ
-    // TODO: 必要な引数を決定する
-    fun unlockDevice() {
-        dispatcher.dispatch(BLEAction.UnlockDevice)
-    }
-
     // デバイスの状態確認アクションを生成し、ディスパッチ
-    // TODO: 必要な引数を決定する
     fun disconnect(device:CHDevices) {
         device.disconnect {
             it.onSuccess {

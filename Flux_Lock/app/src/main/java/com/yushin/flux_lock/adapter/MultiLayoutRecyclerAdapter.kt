@@ -1,24 +1,19 @@
 package com.yushin.flux_lock.adapter
 
-import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import co.candyhouse.sesame.open.device.CHDevices
-import co.candyhouse.sesame.open.device.CHSesame2
-import co.candyhouse.sesame.open.device.CHSesame5
-import com.yushin.flux_lock.R
 import com.yushin.flux_lock.action_creator.BLEActionCreator
-import com.yushin.flux_lock.databinding.SettingAngleCellBinding
-import com.yushin.flux_lock.databinding.SettingItemCellBinding
-import com.yushin.flux_lock.databinding.SettingItemLockBinding
-import com.yushin.flux_lock.databinding.SettingItemLockRowBinding
-import com.yushin.flux_lock.databinding.SettingItemTitleCellBinding
-import com.yushin.flux_lock.databinding.SettingItemUnlockBinding
+import com.yushin.flux_lock.factory.ViewHolderFactory
 import com.yushin.flux_lock.model.ViewType
 import com.yushin.flux_lock.model.ViewTypeCell
-import com.yushin.flux_lock.utils.LockState
+import com.yushin.flux_lock.viewholder.AngleViewHolder
+import com.yushin.flux_lock.viewholder.EditTextViewHolder
+import com.yushin.flux_lock.viewholder.LockTextRowViewHolder
+import com.yushin.flux_lock.viewholder.LockViewHolder
+import com.yushin.flux_lock.viewholder.OKButtonViewHolder
+import com.yushin.flux_lock.viewholder.TitleViewHolder
+import com.yushin.flux_lock.viewholder.UnlockViewHolder
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -29,50 +24,22 @@ class MultiLayoutRecyclerAdapter
     @Assisted private val items: List<ViewTypeCell>,
     @Assisted private val device: CHDevices, // Assistedで外部から渡される引数
     @Assisted private var bleActionCreator: BLEActionCreator
-) : RecyclerView.Adapter<MultiLayoutRecyclerAdapter.ViewHolder>() {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
-        val inflater = LayoutInflater.from(viewGroup.context)
-        return when (viewType) {
-            R.layout.setting_item_title_cell -> {
-                val binding = SettingItemTitleCellBinding.inflate(inflater, viewGroup, false)
-                ViewHolder.TitleViewHolder(binding)
-            }
-            R.layout.setting_item_cell -> {
-                val binding = SettingItemCellBinding.inflate(inflater, viewGroup, false)
-                ViewHolder.EditTextViewHolder(binding)
-            }
-            R.layout.setting_angle_cell -> {
-                val binding = SettingAngleCellBinding.inflate(inflater, viewGroup, false)
-                ViewHolder.AngleViewHolder(binding)
-            }
-            R.layout.setting_item_lock -> {
-                val binding = SettingItemLockBinding.inflate(inflater, viewGroup, false)
-                ViewHolder.LockViewHolder(binding)
-            }
-            R.layout.setting_item_unlock -> {
-                val binding = SettingItemUnlockBinding.inflate(inflater, viewGroup, false)
-                ViewHolder.UnlockViewHolder(binding)
-            }
-            R.layout.setting_item_lock_row -> {
-                val binding = SettingItemLockRowBinding.inflate(inflater, viewGroup, false)
-                ViewHolder.LockTextRowViewHolder(binding)
-            }
-
-            else -> throw IllegalArgumentException("Unknown view type")
-        }
+    override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return ViewHolderFactory.create(viewType, viewGroup)
     }
 
-    override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(viewHolder: RecyclerView.ViewHolder, position: Int) {
         val cell = items[position]
         when (viewHolder) {
-            is ViewHolder.TitleViewHolder -> viewHolder.bind(cell as ViewTypeCell.TitleText)
-            is ViewHolder.EditTextViewHolder -> viewHolder.bind(cell as ViewTypeCell.EditText)
-            is ViewHolder.AngleViewHolder -> viewHolder.bind(device)
-            is ViewHolder.UnlockViewHolder -> viewHolder.bind(device, bleActionCreator)
-            is ViewHolder.LockViewHolder -> viewHolder.bind(device, bleActionCreator)
-            is ViewHolder.LockTextRowViewHolder -> viewHolder.bind(device, bleActionCreator)
-
+            is TitleViewHolder -> viewHolder.bind(cell as ViewTypeCell.TitleText)
+            is EditTextViewHolder -> viewHolder.bind(cell as ViewTypeCell.EditText)
+            is AngleViewHolder -> viewHolder.bind(device)
+            is UnlockViewHolder -> viewHolder.bind(device, bleActionCreator)
+            is LockViewHolder -> viewHolder.bind(device, bleActionCreator)
+            is LockTextRowViewHolder -> viewHolder.bind(device, bleActionCreator)
+            is OKButtonViewHolder -> viewHolder.bind(cell as ViewTypeCell.OKButton)
         }
     }
 
@@ -87,72 +54,6 @@ class MultiLayoutRecyclerAdapter
             if (it is ViewTypeCell.AngleView) {
                 it.device = device // ViewTypeCell.AngleViewにデバイス情報を持たせる
                 notifyItemChanged(index)
-            }
-        }
-    }
-
-    sealed class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-
-        class TitleViewHolder(
-            private val binding: SettingItemTitleCellBinding) :
-            ViewHolder(binding.root) {
-            fun bind(data: ViewTypeCell.TitleText) {
-                binding.setting.text = data.text
-            }
-        }
-
-        class EditTextViewHolder(
-            private val binding: SettingItemCellBinding) :
-            ViewHolder(binding.root) {
-            fun bind(data: ViewTypeCell.EditText) {
-                (binding.setting as TextView).text = data.text
-            }
-        }
-
-        class AngleViewHolder(
-            private val binding: SettingAngleCellBinding
-        ) : ViewHolder(binding.root) {
-
-            fun bind(device: CHDevices) {
-                when (device) {
-                    is CHSesame5 -> binding.ssmView.setLock(device)
-                    is CHSesame2 -> binding.ssmView.setLock(device)
-                    else -> {
-                        // 何もしない
-                    }
-                }
-            }
-        }
-        class UnlockViewHolder(
-            private val binding: SettingItemUnlockBinding
-        ) : ViewHolder(binding.root) {
-            fun bind(device: CHDevices,bleActionCreator: BLEActionCreator) {
-                binding.unlockPosition.setOnClickListener {
-                    bleActionCreator.configureLockPosition(device, LockState.Unlocked)
-                }
-            }
-        }
-
-        class LockViewHolder(
-            private val binding: SettingItemLockBinding
-        ) : ViewHolder(binding.root) {
-            fun bind(device: CHDevices,bleActionCreator: BLEActionCreator) {
-                binding.lockPosition.setOnClickListener {
-                    bleActionCreator.configureLockPosition(device, LockState.Locked)
-                }
-            }
-        }
-
-        class LockTextRowViewHolder(
-            private val binding: SettingItemLockRowBinding
-        ) : ViewHolder(binding.root) {
-            fun bind(device: CHDevices,bleActionCreator: BLEActionCreator) {
-                binding.lockPositionRow.setOnClickListener {
-                    bleActionCreator.configureLockPosition(device, LockState.Locked)
-                }
-                binding.unlockPositionRow.setOnClickListener {
-                    bleActionCreator.configureLockPosition(device, LockState.Unlocked)
-                }
             }
         }
     }

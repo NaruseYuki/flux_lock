@@ -38,16 +38,20 @@ open class BaseFragment : Fragment() {
      private fun setOnBackPressed() {
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                val fragmentManager = activity?.supportFragmentManager
-                if (fragmentManager != null && fragmentManager.backStackEntryCount > 1) {
-                    // バックスタックにフラグメントがある場合は、通常の戻る操作を行う
-                    fragmentManager.popBackStack()
-                } else {
-                    // バックスタックが空の場合、アクティビティを終了する
-                    activity?.finish()
-                }
+                back()
             }
         }
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
+    }
+
+    protected fun back() {
+        val fragmentManager = activity?.supportFragmentManager
+        if (fragmentManager != null && fragmentManager.backStackEntryCount > 1) {
+            // バックスタックにフラグメントがある場合は、通常の戻る操作を行う
+            fragmentManager.popBackStack()
+        } else {
+            // バックスタックが空の場合、アクティビティを終了する
+            activity?.finish()
+        }
     }
 }

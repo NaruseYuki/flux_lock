@@ -29,8 +29,10 @@
     <string name="error_icon_description">エラー発生</string>
     <string name="back_to_top">Topへ戻る</string>
     <string name="back_to_previous">前画面へ戻る</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="lock_position_text">施錠位置を設定</string>
     <string name="unlock_position_text">開錠位置を設定</string>
+    <string name="input_device_name_text">デバイス名を入力してください</string>
+    <string name="input_device_angle_text">デバイスの施錠と解錠の位置を設定してください</string>
+    <string name="input_device_button_text">デバイスのつまみを回して、ちょうど良い位置になったら位置設定ボタンを押してください</string>
+    <string name="input_device_setting_ok">設定を完了する</string>
 </resources>
