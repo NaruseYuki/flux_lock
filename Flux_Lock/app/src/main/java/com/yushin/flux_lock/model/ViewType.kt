@@ -5,7 +5,7 @@ import com.yushin.flux_lock.R
 
 sealed class ViewTypeCell {
     data class TitleText(val text: String) : ViewTypeCell()
-    data class EditText(val text: String) : ViewTypeCell()
+    data class EditText(var text: String) : ViewTypeCell()
     data class AngleView(var device: CHDevices) : ViewTypeCell()
     data object LockView : ViewTypeCell()
     data object UnlockView: ViewTypeCell()
