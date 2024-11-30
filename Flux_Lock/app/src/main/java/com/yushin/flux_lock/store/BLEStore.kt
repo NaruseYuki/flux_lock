@@ -52,7 +52,6 @@ class BLEStore @Inject constructor(
             is BLEAction.ScanDevices -> scanDevices()
             is BLEAction.StopScanDevices -> stopScanDevices()
             is BLEAction.ConnectDevice -> connectDevice(action.device)
-            is BLEAction.SendUserConfig -> sendUserConfig()
             is BLEAction.LockDevice -> lockDevice()
             is BLEAction.UnlockDevice -> unlockDevice()
             is BLEAction.CheckDeviceStatus -> checkDeviceStatus(action.device)

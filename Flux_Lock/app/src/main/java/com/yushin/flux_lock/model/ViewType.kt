@@ -9,6 +9,7 @@ sealed class ViewTypeCell {
     data class AngleView(var device: CHDevices) : ViewTypeCell()
     data object LockView : ViewTypeCell()
     data object UnlockView: ViewTypeCell()
+    data object LockButtonRow : ViewTypeCell()
 }
 
 sealed class ViewType(val layoutId:Int) {
@@ -17,6 +18,7 @@ sealed class ViewType(val layoutId:Int) {
     data object Angle:ViewType(R.layout.setting_angle_cell)
     data object Lock:ViewType(R.layout.setting_item_lock)
     data object Unlock:ViewType(R.layout.setting_item_unlock)
+    data object LockButtonRow:ViewType(R.layout.setting_item_lock_row)
 
     companion object {
         fun fromCell(cell: ViewTypeCell): ViewType {
@@ -26,6 +28,7 @@ sealed class ViewType(val layoutId:Int) {
                 is ViewTypeCell.AngleView -> Angle
                 is ViewTypeCell.LockView -> Lock
                 is ViewTypeCell.UnlockView -> Unlock
+                is ViewTypeCell.LockButtonRow -> LockButtonRow
             }
         }
     }

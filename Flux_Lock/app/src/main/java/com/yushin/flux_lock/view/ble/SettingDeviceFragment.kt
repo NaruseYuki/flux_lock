@@ -57,10 +57,12 @@ class SettingDeviceFragment : BaseFragment() {
             ViewTypeCell.TitleText("デバイス名を入力してください"),
             ViewTypeCell.EditText(deviceName),
             ViewTypeCell.TitleText("デバイスの施錠と解錠の位置を設定してください"),
-            ViewTypeCell.AngleView(deviceData)
+            ViewTypeCell.AngleView(deviceData),
+            ViewTypeCell.TitleText("デバイスのつまみを回して、ちょうど良い位置になったらボタンを押してください"),
+            ViewTypeCell.LockButtonRow
         )
         // Factoryを使ってアダプターを作成
-        multiAdapter = adapterFactory.create(items, deviceData)
+        multiAdapter = adapterFactory.create(items, deviceData,bleActionCreator)
 
         this.recyclerView = binding.settingRecycler.apply {
             itemAnimator = DefaultItemAnimator()
@@ -78,11 +80,6 @@ class SettingDeviceFragment : BaseFragment() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { device ->
                 multiAdapter.updateItems(device)
-//                val unLockPosition = (device as CHSesame2).mechSetting?.unlockPosition ?:0
-//                device.mechStatus?.let { it1 -> (device as CHSesame5).configureLockPosition(it1.position, unLockPosition){
-//
-//                    }
-//                }
             }.addTo(disposable)
     }
 }

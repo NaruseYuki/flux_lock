@@ -11,6 +11,7 @@ import co.candyhouse.sesame.open.device.CHSesame2
 import co.candyhouse.sesame.open.device.CHSesame5
 import com.yushin.flux_lock.action.BLEAction
 import com.yushin.flux_lock.dispatcher.BLEDispatcher
+import com.yushin.flux_lock.utils.LockState
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -92,8 +93,58 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
 
     // ユーザー設定を送信するアクションを生成し、ディスパッチ
     // TODO: 実際の設定データを引数として受け取る
-    fun sendUserConfig(config: Any) {
-        dispatcher.dispatch(BLEAction.SendUserConfig)
+    fun configureLockPosition(device: CHDevices,lockState: LockState) {
+        if (lockState == LockState.Locked){
+            when(device){
+                is CHSesame2 -> device.configureLockPosition(device.mechStatus?.position?:0,device.mechSetting?.unlockPosition?:0){ it ->
+                    it.onSuccess {
+                        Log.d("BLE", "configureLockPosition successes: $it")
+                        // 成功したらonMechStatusからパラメータを受け取る
+                    }
+                    it.onFailure {
+                        Log.d("BLE", "configureLockPosition failed: $it")
+                        // TODO 失敗したらエラーを流すようにしたい
+                    }
+                }
+                is CHSesame5 -> device.configureLockPosition(device.mechStatus?.position?:0,device.mechSetting?.unlockPosition?:0){
+                    it.onSuccess {
+                        Log.d("BLE", "configureLockPosition successes: $it")
+                        // 成功したらonMechStatusからパラメータを受け取る
+                    }
+                    it.onFailure {
+                        Log.d("BLE", "configureLockPosition failed: $it")
+                        // TODO 失敗したらエラーを流すようにしたい
+                    }
+                }
+                else -> Log.d("BLE", "not support device")
+            }
+        } else {
+            when(device){
+                is CHSesame2 -> device.configureLockPosition(device.mechSetting?.lockPosition?:0,device.mechStatus?.position?:0){ it ->
+                    it.onSuccess {
+                        Log.d("BLE", "configureLockPosition successes: $it")
+                        // 成功したらonMechStatusからパラメータを受け取る
+                    }
+                    it.onFailure {
+                        Log.d("BLE", "configureLockPosition failed: $it")
+                        // TODO 失敗したらエラーを流すようにしたい
+                    }
+                }
+                is CHSesame5 -> device.configureLockPosition(device.mechSetting?.lockPosition?:0,device.mechStatus?.position?:0){
+                    it.onSuccess {
+                        Log.d("BLE", "configureLockPosition successes: $it")
+                        // 成功したらonMechStatusからパラメータを受け取る
+                    }
+                    it.onFailure {
+                        Log.d("BLE", "configureLockPosition failed: $it")
+                        // TODO 失敗したらエラーを流すようにしたい
+                    }
+                }
+                else -> Log.d("BLE", "not support device")
+            }
+
+        }
+
     }
 
     // 施錠操作のアクションを生成し、ディスパッチ
@@ -133,7 +184,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
             }
             it.onFailure {
                 //  登録失敗
-                //TODO 失敗を送る
+                // TODO 失敗したらエラーを流すようにしたい
             }
         }
     }
@@ -149,6 +200,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                         }
                         it.onFailure {
                             Log.d("BLE", "device connect failed: $it")
+                            // TODO 失敗したらエラーを流すようにしたい
                         }
                     }
                 }
@@ -171,6 +223,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                 }
                 it.onFailure {
                     Log.d("BLE", "toggle failed: $it")
+                    // TODO 失敗したらエラーを流すようにしたい
                 }
             }
             is CHSesame2 -> device.toggle {
@@ -180,6 +233,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                 }
                 it.onFailure {
                     Log.d("BLE", "toggle failed: $it")
+                    // TODO 失敗したらエラーを流すようにしたい
                 }
             }
         }

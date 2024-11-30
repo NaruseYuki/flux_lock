@@ -9,23 +9,26 @@ import co.candyhouse.sesame.open.device.CHDevices
 import co.candyhouse.sesame.open.device.CHSesame2
 import co.candyhouse.sesame.open.device.CHSesame5
 import com.yushin.flux_lock.R
+import com.yushin.flux_lock.action_creator.BLEActionCreator
 import com.yushin.flux_lock.databinding.SettingAngleCellBinding
 import com.yushin.flux_lock.databinding.SettingItemCellBinding
 import com.yushin.flux_lock.databinding.SettingItemLockBinding
+import com.yushin.flux_lock.databinding.SettingItemLockRowBinding
 import com.yushin.flux_lock.databinding.SettingItemTitleCellBinding
 import com.yushin.flux_lock.databinding.SettingItemUnlockBinding
 import com.yushin.flux_lock.model.ViewType
 import com.yushin.flux_lock.model.ViewTypeCell
+import com.yushin.flux_lock.utils.LockState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
 
 class MultiLayoutRecyclerAdapter
-// 正直hiltはここではいらないが、使ってみたかったので入れてみる
 @AssistedInject constructor(
     @Assisted private val items: List<ViewTypeCell>,
-    @Assisted private val device: CHDevices // Assistedで外部から渡される引数
+    @Assisted private val device: CHDevices, // Assistedで外部から渡される引数
+    @Assisted private var bleActionCreator: BLEActionCreator
 ) : RecyclerView.Adapter<MultiLayoutRecyclerAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
@@ -51,6 +54,11 @@ class MultiLayoutRecyclerAdapter
                 val binding = SettingItemUnlockBinding.inflate(inflater, viewGroup, false)
                 ViewHolder.UnlockViewHolder(binding)
             }
+            R.layout.setting_item_lock_row -> {
+                val binding = SettingItemLockRowBinding.inflate(inflater, viewGroup, false)
+                ViewHolder.LockTextRowViewHolder(binding)
+            }
+
             else -> throw IllegalArgumentException("Unknown view type")
         }
     }
@@ -61,8 +69,10 @@ class MultiLayoutRecyclerAdapter
             is ViewHolder.TitleViewHolder -> viewHolder.bind(cell as ViewTypeCell.TitleText)
             is ViewHolder.EditTextViewHolder -> viewHolder.bind(cell as ViewTypeCell.EditText)
             is ViewHolder.AngleViewHolder -> viewHolder.bind(device)
-            is ViewHolder.UnlockViewHolder -> viewHolder.bind(device)
-            is ViewHolder.LockViewHolder -> viewHolder.bind(device)
+            is ViewHolder.UnlockViewHolder -> viewHolder.bind(device, bleActionCreator)
+            is ViewHolder.LockViewHolder -> viewHolder.bind(device, bleActionCreator)
+            is ViewHolder.LockTextRowViewHolder -> viewHolder.bind(device, bleActionCreator)
+
         }
     }
 
@@ -83,14 +93,16 @@ class MultiLayoutRecyclerAdapter
 
     sealed class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        class TitleViewHolder(private val binding: SettingItemTitleCellBinding) :
+        class TitleViewHolder(
+            private val binding: SettingItemTitleCellBinding) :
             ViewHolder(binding.root) {
             fun bind(data: ViewTypeCell.TitleText) {
                 binding.setting.text = data.text
             }
         }
 
-        class EditTextViewHolder(private val binding: SettingItemCellBinding) :
+        class EditTextViewHolder(
+            private val binding: SettingItemCellBinding) :
             ViewHolder(binding.root) {
             fun bind(data: ViewTypeCell.EditText) {
                 (binding.setting as TextView).text = data.text
@@ -106,7 +118,7 @@ class MultiLayoutRecyclerAdapter
                     is CHSesame5 -> binding.ssmView.setLock(device)
                     is CHSesame2 -> binding.ssmView.setLock(device)
                     else -> {
-                        // デフォルト処理やエラーハンドリング
+                        // 何もしない
                     }
                 }
             }
@@ -114,9 +126,9 @@ class MultiLayoutRecyclerAdapter
         class UnlockViewHolder(
             private val binding: SettingItemUnlockBinding
         ) : ViewHolder(binding.root) {
-            fun bind(device: CHDevices) {
-                binding.unlockPosition.setOnClickListener{
-
+            fun bind(device: CHDevices,bleActionCreator: BLEActionCreator) {
+                binding.unlockPosition.setOnClickListener {
+                    bleActionCreator.configureLockPosition(device, LockState.Unlocked)
                 }
             }
         }
@@ -124,9 +136,22 @@ class MultiLayoutRecyclerAdapter
         class LockViewHolder(
             private val binding: SettingItemLockBinding
         ) : ViewHolder(binding.root) {
-            fun bind(device: CHDevices) {
-                binding.lockPosition.setOnClickListener{
+            fun bind(device: CHDevices,bleActionCreator: BLEActionCreator) {
+                binding.lockPosition.setOnClickListener {
+                    bleActionCreator.configureLockPosition(device, LockState.Locked)
+                }
+            }
+        }
 
+        class LockTextRowViewHolder(
+            private val binding: SettingItemLockRowBinding
+        ) : ViewHolder(binding.root) {
+            fun bind(device: CHDevices,bleActionCreator: BLEActionCreator) {
+                binding.lockPositionRow.setOnClickListener {
+                    bleActionCreator.configureLockPosition(device, LockState.Locked)
+                }
+                binding.unlockPositionRow.setOnClickListener {
+                    bleActionCreator.configureLockPosition(device, LockState.Unlocked)
                 }
             }
         }
@@ -134,7 +159,9 @@ class MultiLayoutRecyclerAdapter
 
     @AssistedFactory
     interface Factory {
-        fun create(items: List<ViewTypeCell>, device: CHDevices): MultiLayoutRecyclerAdapter
+        fun create(items: List<ViewTypeCell>,
+                   device: CHDevices,
+                   bleActionCreator: BLEActionCreator): MultiLayoutRecyclerAdapter
     }
 }
 
