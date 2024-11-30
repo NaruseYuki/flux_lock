@@ -34,7 +34,10 @@ class MultiLayoutRecyclerAdapter
         val cell = items[position]
         when (viewHolder) {
             is TitleViewHolder -> viewHolder.bind(cell as ViewTypeCell.TitleText)
-            is EditTextViewHolder -> viewHolder.bind(cell as ViewTypeCell.EditText)
+            is EditTextViewHolder -> viewHolder.bind(cell as ViewTypeCell.EditText){ updatedText ->
+                // リアルタイムでアイテムを更新
+                (items[position] as ViewTypeCell.EditText).text = updatedText
+            }
             is AngleViewHolder -> viewHolder.bind(device)
             is UnlockViewHolder -> viewHolder.bind(device, bleActionCreator)
             is LockViewHolder -> viewHolder.bind(device, bleActionCreator)

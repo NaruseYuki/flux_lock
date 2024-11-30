@@ -1,9 +1,11 @@
 package com.yushin.flux_lock.view.ble
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -22,6 +24,7 @@ import com.yushin.flux_lock.viewholder.EditTextViewHolder
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import java.util.logging.Logger
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -29,7 +32,7 @@ class SettingDeviceFragment : BaseFragment() {
     private var recyclerView: RecyclerView? = null
     private lateinit var binding: FragmentSettingDeviceBinding
     @Inject
-    private lateinit var adapterFactory: MultiLayoutRecyclerAdapter.Factory
+    lateinit var adapterFactory: MultiLayoutRecyclerAdapter.Factory
     private lateinit var multiAdapter: MultiLayoutRecyclerAdapter
     private lateinit var sharedPreferencesHelper: SharedPreferencesHelper
 
@@ -58,19 +61,18 @@ class SettingDeviceFragment : BaseFragment() {
         // sharedPrefsからデバイス名を取得
         val deviceName = deviceData.deviceId?.let { sharedPreferencesHelper.getDeviceName(it) } ?:""
 
-        val items: List<ViewTypeCell> = listOf(
+        val items = mutableListOf(
             ViewTypeCell.TitleText(getString(R.string.input_device_name_text)),
             ViewTypeCell.EditText(deviceName),
             ViewTypeCell.TitleText(getString(R.string.input_device_angle_text)),
             ViewTypeCell.AngleView(deviceData),
             ViewTypeCell.TitleText(getString(R.string.input_device_button_text)),
-            ViewTypeCell.LockButtonRow,
+            ViewTypeCell.LockButtonRow
+        )
+        items.add(
             ViewTypeCell.OKButton(getString(R.string.input_device_setting_ok)){
-                if(deviceName != (binding.settingRecycler.findViewHolderForAdapterPosition(1)
-                            as EditTextViewHolder).binding.setting.text.toString()){
-                    // sharedPrefsにデバイス名を保存する
-                    deviceData.deviceId?.let { sharedPreferencesHelper.saveDeviceName(it,deviceName) }
-                }
+                val name = (items[1] as ViewTypeCell.EditText).text
+                saveDeviceNameIfChanged(name, deviceData)
                 Toast.makeText(requireContext(),
                     getString(R.string.input_device_setting_complete),
                     Toast.LENGTH_SHORT).show()
@@ -78,6 +80,7 @@ class SettingDeviceFragment : BaseFragment() {
                 back()
             }
         )
+
         // Factoryを使ってアダプターを作成
         multiAdapter = adapterFactory.create(items, deviceData,bleActionCreator)
 
@@ -97,5 +100,12 @@ class SettingDeviceFragment : BaseFragment() {
             .subscribe { device ->
                 multiAdapter.updateItems(device)
             }.addTo(disposable)
+    }
+
+    private fun saveDeviceNameIfChanged(name: String, deviceData: CHDevices) {
+        val oldName = deviceData.deviceId?.let { sharedPreferencesHelper.getDeviceName(it) }
+        if (name != oldName) {
+            deviceData.deviceId?.let { sharedPreferencesHelper.saveDeviceName(it, name) }
+        }
     }
 }
