@@ -1,14 +1,21 @@
 package com.yushin.flux_lock.store
 
+import android.bluetooth.BluetoothDevice
 import android.util.Log
+import co.candyhouse.sesame.open.CHResult
 import co.candyhouse.sesame.open.device.CHDeviceStatus
+import co.candyhouse.sesame.open.device.CHDeviceStatusDelegate
 import co.candyhouse.sesame.open.device.CHDevices
+import co.candyhouse.sesame.open.device.CHProductModel
+import co.candyhouse.sesame.open.device.CHSesameProtocolMechStatus
+import co.candyhouse.sesame.server.dto.CHEmpty
 import com.yushin.flux_lock.action.BLEAction
 import com.yushin.flux_lock.dispatcher.BLEDispatcher
 import com.yushin.flux_lock.utils.Utils.addTo
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.subjects.BehaviorSubject
 import io.reactivex.rxjava3.subjects.PublishSubject
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,10 +32,10 @@ class BLEStore @Inject constructor(
     private val registeredSubject = BehaviorSubject.createDefault(registeredDevices)
 
     // 接続デバイス
-    private val connectedSubject = BehaviorSubject.create<CHDevices?>()
+    private var connectedSubject = BehaviorSubject.create<CHDevices?>()
 
     // デバイスステータス
-    val bleStatusSubject = BehaviorSubject.create<CHDeviceStatus>()
+    var bleStatusSubject = BehaviorSubject.create<CHDeviceStatus>()
 
     // ローディング中フラグ
     val loadingSubject = PublishSubject.create<Boolean>()
@@ -51,11 +58,10 @@ class BLEStore @Inject constructor(
             is BLEAction.ScanDevices -> scanDevices()
             is BLEAction.StopScanDevices -> stopScanDevices()
             is BLEAction.ConnectDevice -> connectDevice(action.device)
-            is BLEAction.SendUserConfig -> sendUserConfig()
             is BLEAction.LockDevice -> lockDevice()
             is BLEAction.UnlockDevice -> unlockDevice()
-            is BLEAction.CheckDeviceStatus -> checkDeviceStatus()
-            is BLEAction.RegisterDevice -> registerDevice()
+            is BLEAction.CheckDeviceStatus -> checkDeviceStatus(action.device)
+            is BLEAction.RegisterDevice -> registerDevice(action.device)
             is BLEAction.ChangeBleStatus -> changeBleStatus(action.status)
             is BLEAction.Toggle -> toggle(action.device)
             is BLEAction.DisconnectDevice ->disconnectDevice(action.device)
@@ -63,6 +69,9 @@ class BLEStore @Inject constructor(
     }
 
     private fun disconnectDevice(device: CHDevices) {
+        // nullを入れると例外エラーが投げられるので、切断時はdummyを入れておく
+        val dummy:CHDevices = DummyDevice()
+        connectedSubject.onNext(dummy)
         Log.d("BLE", "disconnect: $device")
     }
 
@@ -82,16 +91,22 @@ class BLEStore @Inject constructor(
         unRegisteredSubject.onNext(unRegisteredDevices)
     }
 
-    private fun registerDevice() {
+    private fun registerDevice(device: CHDevices) {
         //登録成功したデバイスをストアに反映する
-        connectedSubject.value?.let { registeredDevices.add(it) }
+        registeredDevices.add(device)
         registeredSubject.onNext(registeredDevices)
         Log.d("BLE", "registerDevice: $registeredDevices")
 
     }
 
-    private fun checkDeviceStatus() {
-        TODO("Not yet implemented")
+    private fun checkDeviceStatus(device: CHDevices) {
+//        val list = mutableListOf(
+//            (device as? CHSesame5)?.mechSetting?.lockPosition,
+//            (device as? CHSesame5)?.mechSetting?.unlockPosition,
+//            (device as? CHSesame5)?.mechSetting?.autoLockSecond
+//        )
+        connectedSubject.onNext(device)
+        Log.d("BLE", "@@@_$connectedSubject")
     }
 
     private fun unlockDevice() {
@@ -108,7 +123,7 @@ class BLEStore @Inject constructor(
 
     private fun connectDevice(device: CHDevices) {
         connectedSubject.onNext(device)
-        Log.d("BLE", "finished connectDevice")
+        Log.d("BLE", "@@@_$connectedSubject")
     }
 
     private fun scanDevices() {
@@ -143,4 +158,40 @@ class BLEStore @Inject constructor(
     // 接続デバイスを取得する
     fun getConnectedDevice() = connectedSubject
 
+}
+
+// ダミーデバイスのクラス定義
+class DummyDevice : CHDevices {
+    override var mechStatus: CHSesameProtocolMechStatus? = null
+    override var deviceTimestamp: Long? = null
+    override var loginTimestamp: Long? = null
+    override var delegate: CHDeviceStatusDelegate? = null
+    override var deviceStatus: CHDeviceStatus = CHDeviceStatus.NoBleSignal // 初期ステータス
+    override var deviceShadowStatus: CHDeviceStatus? = null
+    override var rssi: Int? = -100 // デフォルトの低いRSSI値
+    override var deviceId: UUID? = UUID.fromString("00000000-0000-0000-0000-000000000000") // ダミーID
+    override var isRegistered: Boolean = false
+    override var productModel: CHProductModel = CHProductModel.SS5 // 仮モデル
+
+    // メソッドをダミー実装
+    override fun connect(result: CHResult<CHEmpty>) {
+    }
+
+    override fun disconnect(result: CHResult<CHEmpty>) {
+    }
+
+    override fun dropKey(result: CHResult<CHEmpty>) {
+    }
+
+    override fun getVersionTag(result: CHResult<String>) {
+    }
+
+    override fun register(result: CHResult<CHEmpty>) {
+    }
+
+    override fun reset(result: CHResult<CHEmpty>) {
+    }
+
+    override fun updateFirmware(onResponse: CHResult<BluetoothDevice>) {
+    }
 }

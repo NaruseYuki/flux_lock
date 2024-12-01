@@ -34,10 +34,6 @@ sealed class BLEAction {
     // 接続実行
     data class ConnectDevice(val device: CHDevices) : BLEAction()
 
-    // デバイスの設定を送信する
-    //TODO:引数のクラスを決定する
-    data object SendUserConfig:BLEAction()
-
     // 施錠操作
     // TODO:引数のクラスを決定する
     data object LockDevice:BLEAction()
@@ -47,11 +43,10 @@ sealed class BLEAction {
     data object UnlockDevice:BLEAction()
 
     // デバイスの状態を確認する
-    // TODO:引数のクラスを決定する
-    data object CheckDeviceStatus:BLEAction()
+    data class CheckDeviceStatus(val device: CHDevices) : BLEAction()
 
     // デバイスをDBに登録する
-    data object RegisterDevice:BLEAction()
+    data class RegisterDevice(val device: CHDevices):BLEAction()
 
     data class ChangeBleStatus(val status: CHDeviceStatus):BLEAction()
 

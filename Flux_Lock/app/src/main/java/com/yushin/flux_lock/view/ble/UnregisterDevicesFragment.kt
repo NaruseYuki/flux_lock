@@ -13,14 +13,20 @@ import com.yushin.flux_lock.R
 import com.yushin.flux_lock.utils.Utils.addTo
 import com.yushin.flux_lock.adapter.BLEAdapter
 import com.yushin.flux_lock.databinding.FragmentUnregisteredDevicesBinding
+import com.yushin.flux_lock.utils.SharedPreferencesHelper
 import com.yushin.flux_lock.view.BLEActivity
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import io.reactivex.rxjava3.disposables.CompositeDisposable
 
 class UnregisterDevicesFragment : BaseFragment() {
     private var recyclerView: RecyclerView? = null
     private lateinit var bleAdapter: BLEAdapter
     private lateinit var binding: FragmentUnregisteredDevicesBinding
+    private lateinit var sharedPreferencesHelper: SharedPreferencesHelper
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        sharedPreferencesHelper = SharedPreferencesHelper(requireContext())
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -44,7 +50,6 @@ class UnregisterDevicesFragment : BaseFragment() {
 
     override fun onResume() {
         super.onResume()
-        disposable = CompositeDisposable()
         // BLEStoreを監視し、変更があったらUIを更新する
         bleStore.getUnregisteredDevices()
             .skip(1)
@@ -62,9 +67,10 @@ class UnregisterDevicesFragment : BaseFragment() {
         Log.d("UnregisterDevicesFragment", "onDeviceClicked: $device")
         // 接続を実行する
         bleActionCreator.firstConnectDevice(device)
-//        (activity as BLEActivity).navigateFragment(
-//            R.id.container_main_fragment,
-//            UnregisterDevicesFragment() // 名前の設定画面へ
-//        )
+        device.deviceId?.let { sharedPreferencesHelper.saveDeviceName(it, device.productModel.deviceModelName()) }
+        (activity as BLEActivity).navigateFragment(
+            R.id.container_main_fragment,
+            RegisterCompletedFragment() // 名前の設定画面へ
+        )
     }
 }

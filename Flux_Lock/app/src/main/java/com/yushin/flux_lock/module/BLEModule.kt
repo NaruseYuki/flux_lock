@@ -1,6 +1,8 @@
 package com.yushin.flux_lock.module
 
+import com.yushin.flux_lock.adapter.MultiLayoutRecyclerAdapter
 import com.yushin.flux_lock.dispatcher.BLEDispatcher
+import com.yushin.flux_lock.model.ViewTypeCell
 import com.yushin.flux_lock.store.BLEStore
 import dagger.Module
 import dagger.Provides

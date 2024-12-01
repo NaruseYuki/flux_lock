@@ -6,27 +6,17 @@ import android.view.View
 import android.view.ViewGroup
 import com.yushin.flux_lock.R
 import com.yushin.flux_lock.databinding.FragmentNoDevicesBinding
+import com.yushin.flux_lock.databinding.FragmentRegisterCompletedBinding
 import com.yushin.flux_lock.view.BLEActivity
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 
-class NoDevicesFragment : BaseFragment() {
-    private lateinit var binding: FragmentNoDevicesBinding
+class RegisterCompletedFragment : BaseFragment() {
+    private lateinit var binding: FragmentRegisterCompletedBinding
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        binding = FragmentNoDevicesBinding.inflate(inflater,container,false)
-        addDevicesListener()
+        binding = FragmentRegisterCompletedBinding.inflate(inflater,container,false)
         return binding.root
-    }
-
-    private fun addDevicesListener() {
-        binding.addDevices.setOnClickListener {
-            // UnregisterDevicesFragmentを表示する
-            (activity as BLEActivity).navigateFragment(
-                R.id.container_main_fragment,
-                UnregisterDevicesFragment()
-            )
-        }
     }
 }

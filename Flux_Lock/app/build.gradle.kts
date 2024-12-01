@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseClassesTask
+import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
 
 plugins {
     id("com.android.application")
@@ -76,9 +78,10 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
-    implementation("androidx.navigation:navigation-fragment:2.7.7")
-    implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
     testImplementation("junit:junit:4.13.2")
+    testImplementation("io.appium:java-client:8.5.1") // 最新バージョンはAppium公式ドキュメントで確認
+    testImplementation("org.jetbrains.kotlin:kotlin-test")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     implementation ("io.reactivex.rxjava3:rxjava:3.0.0")
@@ -89,7 +92,7 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
-    ksp("com.google.dagger:hilt-compiler:2.48.1")
+    ksp ("com.google.dagger:hilt-compiler:2.48.1")
     implementation ("com.github.bumptech.glide:glide:4.16.0")
 
     /** sesame sdk  ==> */
@@ -106,5 +109,24 @@ dependencies {
     implementation ("com.amazonaws:aws-android-sdk-iot:2.19.3")
 
     /** end sesame sdk  <== */
+    androidComponents {
+        onVariants(selector().all()) { variant ->
+            afterEvaluate {
+                project.tasks.getByName("ksp${variant.name.capitalize()}Kotlin") {
+                    val dataBindingTask =
+                        try {
+                            val taskName = "dataBindingGenBaseClasses${variant.name.capitalize()}"
+                            project.tasks.getByName(taskName) as DataBindingGenBaseClassesTask
+                        } catch (e: UnknownTaskException) {
+                            return@getByName
+                        }
+
+                    project.tasks.getByName("ksp${variant.name.capitalize()}Kotlin") {
+                        (this as AbstractKotlinCompileTool<*>).setSource(dataBindingTask.sourceOutFolder)
+                    }
+                }
+            }
+        }
+    }
 }
 

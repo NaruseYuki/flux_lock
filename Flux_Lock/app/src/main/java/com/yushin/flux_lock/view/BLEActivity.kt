@@ -12,6 +12,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import com.yushin.flux_lock.R
 import com.yushin.flux_lock.action_creator.BLEActionCreator
 import com.yushin.flux_lock.databinding.ActivityMainBinding
@@ -160,6 +161,8 @@ class BLEActivity : AppCompatActivity() {
                 .subscribe{
                     if (it.isNotEmpty()) {
                         // ControlDeviceFragmentを表示する
+                        // 全てのフラグメントをバックスタックから削除
+                        supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
                         navigateFragment(R.id.container_main_fragment,ControlDeviceFragment())
                     } else{
                         // NoDevicesFragmentを表示する

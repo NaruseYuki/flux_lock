@@ -5,20 +5,30 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import co.candyhouse.sesame.open.device.CHDeviceStatus
+import co.candyhouse.sesame.open.device.CHDevices
 import com.bumptech.glide.Glide
 import com.yushin.flux_lock.R
 import com.yushin.flux_lock.databinding.FragmentControlDeviceBinding
+import com.yushin.flux_lock.utils.SharedPreferencesHelper
 import com.yushin.flux_lock.utils.Utils.addTo
 import com.yushin.flux_lock.view.BLEActivity
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import java.util.UUID
 
-@AndroidEntryPoint
 class ControlDeviceFragment : BaseFragment() {
     private lateinit var binding: FragmentControlDeviceBinding
+    private lateinit var sharedPreferencesHelper: SharedPreferencesHelper
+    private var selectedIndex = -1
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        sharedPreferencesHelper = SharedPreferencesHelper(requireContext())
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -31,14 +41,15 @@ class ControlDeviceFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         addDevicesListener()
-        setLockImageListener()
+        editDeviceSetting()
+        setAdapterListener()
     }
 
     override fun onResume() {
         super.onResume()
-        disposable = CompositeDisposable()
         subscribeDeviceStatus()
-        connectFirstDevice()
+        createDeviceList()
+        setLockImageListener()
     }
 
     /**
@@ -74,26 +85,58 @@ class ControlDeviceFragment : BaseFragment() {
                     }
                 }
          }
+
+        bleStore.getConnectedDevice()
+            .skip(1)
+            .observeOn(AndroidSchedulers.mainThread())
+            .filter {
+                it != null
+            }
+            .subscribe { device ->
+                // 向き先変更
+                binding.lockImage.setOnClickListener {
+                    bleActionCreator.toggle(device)
+                }
+            }.addTo(disposable)
+    }
+
+    private fun setAdapterListener() {
+        binding.spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
+                if (selectedIndex == p2) return
+                selectedIndex = p2
+                connectDevice(selectedIndex)
+                sharedPreferencesHelper.saveConnectIndex(selectedIndex)
+            }
+
+            override fun onNothingSelected(p0: AdapterView<*>?) {
+                // 何もしない
+            }
+        }
     }
 
     /**
      * リストの最初のデバイスに接続する
      */
-    private fun connectFirstDevice() {
-        // この画面を表示しているときに他動線からデバイスの変更なければこのままで良い
-         bleStore.getRegisteredDevices().value?.
-            let { devices ->
-             binding.spinner.adapter =
-                 ArrayAdapter(
+    private fun connectDevice(index:Int) {
+         // 接続開始
+         bleActionCreator.connectDevice(
+             bleStore.getRegisteredDevices().value?.get(index) ?: return)
+    }
+
+    private fun createDeviceList() {
+        bleStore.getRegisteredDevices().value?.let { devices ->
+            binding.spinner.adapter =
+                ArrayAdapter(
                     requireContext(),
                     R.layout.item_device,
                     devices.map {
-                        it.productModel.deviceModelName()
+                        it.deviceId?.let { it1 ->
+                            sharedPreferencesHelper.getDeviceName(it1)
+                        } ?: it.productModel.deviceModelName()
                     }
                 )
-             // 接続開始
-             bleActionCreator.connectDevice(devices[0])
-             binding.spinner.setSelection(0)
+            binding.spinner.setSelection(sharedPreferencesHelper.getConnectIndex())
         }
     }
 
@@ -103,6 +146,16 @@ class ControlDeviceFragment : BaseFragment() {
             (activity as BLEActivity).navigateFragment(
                 R.id.container_main_fragment,
                 UnregisterDevicesFragment()
+            )
+        }
+    }
+
+    private fun editDeviceSetting(){
+        // EditDeviceSettingFragmentを表示する
+        binding.settingButton.setOnClickListener {
+            (activity as BLEActivity).navigateFragment(
+                R.id.container_main_fragment,
+                SettingDeviceFragment()
             )
         }
     }

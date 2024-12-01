@@ -21,6 +21,7 @@ open class BaseFragment : Fragment() {
      lateinit var bleActionCreator: BLEActionCreator
 
      override fun onDestroyView() {
+         bleStore.getConnectedDevice().value?.let { bleActionCreator.disconnect(it) }
          disposable.dispose()
          super.onDestroyView()
      }
@@ -28,6 +29,11 @@ open class BaseFragment : Fragment() {
     override fun onPause() {
         super.onPause()
         disposable.clear()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        disposable = CompositeDisposable()
     }
 
      override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -38,16 +44,20 @@ open class BaseFragment : Fragment() {
      private fun setOnBackPressed() {
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                val fragmentManager = activity?.supportFragmentManager
-                if (fragmentManager != null && fragmentManager.backStackEntryCount > 1) {
-                    // バックスタックにフラグメントがある場合は、通常の戻る操作を行う
-                    fragmentManager.popBackStack()
-                } else {
-                    // バックスタックが空の場合、アクティビティを終了する
-                    activity?.finish()
-                }
+                back()
             }
         }
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
+    }
+
+    protected fun back() {
+        val fragmentManager = activity?.supportFragmentManager
+        if (fragmentManager != null && fragmentManager.backStackEntryCount > 1) {
+            // バックスタックにフラグメントがある場合は、通常の戻る操作を行う
+            fragmentManager.popBackStack()
+        } else {
+            // バックスタックが空の場合、アクティビティを終了する
+            activity?.finish()
+        }
     }
 }
