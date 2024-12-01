@@ -46,7 +46,7 @@ sealed class BLEAction {
     data class CheckDeviceStatus(val device: CHDevices) : BLEAction()
 
     // デバイスをDBに登録する
-    data object RegisterDevice:BLEAction()
+    data class RegisterDevice(val device: CHDevices):BLEAction()
 
     data class ChangeBleStatus(val status: CHDeviceStatus):BLEAction()
 

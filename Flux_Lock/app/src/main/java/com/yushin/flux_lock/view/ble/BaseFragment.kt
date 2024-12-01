@@ -21,6 +21,7 @@ open class BaseFragment : Fragment() {
      lateinit var bleActionCreator: BLEActionCreator
 
      override fun onDestroyView() {
+         bleStore.getConnectedDevice().value?.let { bleActionCreator.disconnect(it) }
          disposable.dispose()
          super.onDestroyView()
      }

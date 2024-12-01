@@ -31,6 +31,8 @@ class MultiLayoutRecyclerAdapter
     }
 
     override fun onBindViewHolder(viewHolder: RecyclerView.ViewHolder, position: Int) {
+        viewHolder.itemView.isFocusable = true
+        viewHolder.itemView.isFocusableInTouchMode = true
         val cell = items[position]
         when (viewHolder) {
             is TitleViewHolder -> viewHolder.bind(cell as ViewTypeCell.TitleText)
