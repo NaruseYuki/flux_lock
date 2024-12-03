@@ -1,1 +1,1 @@
-SesameSDK3.0 for Android　を使ったスマートロック連携アプリの開発を行っています。
+SesameSDK3.0 for Android　を使ったスマートロック連携アプリの開発を行っています（現在整備中）。
