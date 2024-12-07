@@ -51,7 +51,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:text="@string/reconnect_text"
         android:layout_marginTop="32dp"
-        android:backgroundTint="@color/black"
+        android:backgroundTint="@color/tint_black"
         android:textColor="@color/white"
         />
 

@@ -67,7 +67,7 @@ class ControlDeviceFragment : BaseFragment() {
                    CHDeviceStatus.NoBleSignal -> {
                        binding.lockImage.setImageResource(R.drawable.ic_no_signal)
                        binding.connectButton.isEnabled = true
-                       binding.connectButton.backgroundTintList = ColorStateList.valueOf(getColor(requireContext(), R.color.brown))
+                       binding.connectButton.backgroundTintList = ColorStateList.valueOf(getColor(requireContext(), R.color.tint_black))
                    }
                    else -> {
                        Glide.with(requireActivity())
