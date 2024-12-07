@@ -62,7 +62,6 @@ class UnregisterDevicesFragment : BaseFragment() {
         bleActionCreator.loadUnregisteredDevices()
     }
 
-
     private fun onDeviceClicked(device: CHDevices) {
         Log.d("UnregisterDevicesFragment", "onDeviceClicked: $device")
         // 接続を実行する

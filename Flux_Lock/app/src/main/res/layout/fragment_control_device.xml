@@ -6,6 +6,19 @@
     android:layout_height="match_parent"
     android:layout_marginHorizontal="16dp">
 
+    <Button
+        android:id="@+id/setting_button"
+        android:layout_width="0dp"
+        android:layout_height="64dp"
+        android:layout_marginTop="132dp"
+        android:backgroundTint="@color/brown"
+        android:text="@string/setting_button_title"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/lock_image" />
+
     <Spinner
         android:id="@+id/spinner"
         android:layout_width="wrap_content"
@@ -30,15 +43,15 @@
         app:layout_constraintTop_toBottomOf="@+id/spinner" />
 
     <Button
-        android:id="@+id/setting_button"
+        android:id="@+id/connect_button"
         android:layout_width="0dp"
         android:layout_height="64dp"
-        app:layout_constraintTop_toBottomOf="@id/lock_image"
+        app:layout_constraintTop_toBottomOf="@id/setting_button"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:text="@string/setting_button_title"
+        android:text="@string/reconnect_text"
         android:layout_marginTop="32dp"
-        android:backgroundTint="@color/brown"
+        android:backgroundTint="@color/black"
         android:textColor="@color/white"
         />
 
@@ -49,5 +62,16 @@
         android:src="@drawable/baseline_add_24"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        tools:ignore="ContentDescription" />
+        tools:ignore="ContentDescription"
+        />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/delete_devices"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/baseline_delete_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:ignore="ContentDescription"
+        android:backgroundTint="@color/white"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

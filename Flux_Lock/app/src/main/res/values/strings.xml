@@ -39,4 +39,5 @@
     <string name="input_device_setting_back">戻る</string>
     <string name="register_device_completed">登録完了\nしばらくすると画面が切り替わります</string>
     <string name="connect_index">connect_index</string>
+    <string name="reconnect_text">再接続</string>
 </resources>

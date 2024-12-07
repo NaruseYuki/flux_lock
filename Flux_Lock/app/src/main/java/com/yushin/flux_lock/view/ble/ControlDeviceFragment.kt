@@ -116,12 +116,19 @@ class ControlDeviceFragment : BaseFragment() {
     }
 
     /**
-     * リストの最初のデバイスに接続する
+     * リストのindexのデバイスに接続する
      */
     private fun connectDevice(index:Int) {
-         // 接続開始
+        // 接続済みならreturn
+        if(isConnect(index)) {
+            Log.d("BLE", "connect:接続済み")
+            return
+        }
+        Log.d("BLE", "connect:接続開始")
+        // 接続開始
          bleActionCreator.connectDevice(
-             bleStore.getRegisteredDevices().value?.get(index) ?: return)
+         bleStore.getRegisteredDevices().value?.get(index) ?: return
+         )
     }
 
     private fun createDeviceList() {
@@ -132,6 +139,7 @@ class ControlDeviceFragment : BaseFragment() {
                     R.layout.item_device,
                     devices.map {
                         it.deviceId?.let { it1 ->
+                            Log.d("BLE", "getDeviceName: $it")
                             sharedPreferencesHelper.getDeviceName(it1)
                         } ?: it.productModel.deviceModelName()
                     }
@@ -148,6 +156,23 @@ class ControlDeviceFragment : BaseFragment() {
                 UnregisterDevicesFragment()
             )
         }
+
+        // 手動再接続
+        binding.connectButton.setOnClickListener {
+            connectDevice(selectedIndex)
+        }
+
+        binding.deleteDevices.setOnClickListener {
+                /**
+                 * TODO 削除確認ダイアログを出す
+                 *  OK:セサミ初期化アクションを送る
+                 *      アクション成功時、端末からも情報削除する
+                 *      端末情報を削除できたら、index -1(>0)のロックに接続しに行く
+                 *      端末未登録時は、勝手に画面がnoDevicesFragmentに移行するので気にしなくて良い
+                 *      アクション失敗時、端末から情報は削除しない
+                 *  NO:ダイアログを閉じる
+                */
+        }
     }
 
     private fun editDeviceSetting(){
@@ -155,7 +180,9 @@ class ControlDeviceFragment : BaseFragment() {
         binding.settingButton.setOnClickListener {
             (activity as BLEActivity).navigateFragment(
                 R.id.container_main_fragment,
-                SettingDeviceFragment()
+                SettingDeviceFragment.create(
+                    bleStore.getRegisteredDevices().value?.get(selectedIndex) ?:return@setOnClickListener
+                )
             )
         }
     }

@@ -60,4 +60,6 @@ open class BaseFragment : Fragment() {
             activity?.finish()
         }
     }
+    protected fun isConnect(index:Int):Boolean
+        = (bleStore.getConnectedDevice().value == bleStore.getRegisteredDevices().value?.get(index))
 }

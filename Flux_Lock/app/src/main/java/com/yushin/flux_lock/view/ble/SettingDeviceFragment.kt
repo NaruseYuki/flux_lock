@@ -24,11 +24,12 @@ import com.yushin.flux_lock.viewholder.EditTextViewHolder
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import java.util.UUID
 import java.util.logging.Logger
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class SettingDeviceFragment : BaseFragment() {
+class SettingDeviceFragment(private val chDevices: CHDevices) : BaseFragment() {
     private var recyclerView: RecyclerView? = null
     private lateinit var binding: FragmentSettingDeviceBinding
     @Inject
@@ -57,22 +58,22 @@ class SettingDeviceFragment : BaseFragment() {
     }
 
     private fun dispSettingView() {
-        val deviceData: CHDevices = bleStore.getConnectedDevice().value ?: return
         // sharedPrefsからデバイス名を取得
-        val deviceName = deviceData.deviceId?.let { sharedPreferencesHelper.getDeviceName(it) } ?:""
+        val deviceName = chDevices.deviceId?.let { sharedPreferencesHelper.getDeviceName(it) } ?:""
+        Log.d("BLE", "getDeviceName: $deviceName")
 
         val items = mutableListOf(
             ViewTypeCell.TitleText(getString(R.string.input_device_name_text)),
             ViewTypeCell.EditText(deviceName),
             ViewTypeCell.TitleText(getString(R.string.input_device_angle_text)),
-            ViewTypeCell.AngleView(deviceData),
+            ViewTypeCell.AngleView(chDevices),
             ViewTypeCell.TitleText(getString(R.string.input_device_button_text)),
             ViewTypeCell.LockButtonRow
         )
         items.add(
             ViewTypeCell.OKButton(getString(R.string.input_device_setting_ok)){
                 val name = (items[1] as ViewTypeCell.EditText).text
-                saveDeviceNameIfChanged(name, deviceData)
+                saveDeviceNameIfChanged(name, chDevices)
                 Toast.makeText(requireContext(),
                     getString(R.string.input_device_setting_complete),
                     Toast.LENGTH_SHORT).show()
@@ -87,7 +88,7 @@ class SettingDeviceFragment : BaseFragment() {
         )
 
         // Factoryを使ってアダプターを作成
-        multiAdapter = adapterFactory.create(items, deviceData,bleActionCreator)
+        multiAdapter = adapterFactory.create(items, chDevices,bleActionCreator)
 
         this.recyclerView = binding.settingRecycler.apply {
             itemAnimator = DefaultItemAnimator()
@@ -110,5 +111,9 @@ class SettingDeviceFragment : BaseFragment() {
         if (name != oldName) {
             deviceData.deviceId?.let { sharedPreferencesHelper.saveDeviceName(it, name) }
         }
+    }
+
+    companion object {
+        fun create(chDevices:CHDevices) = SettingDeviceFragment(chDevices)
     }
 }
