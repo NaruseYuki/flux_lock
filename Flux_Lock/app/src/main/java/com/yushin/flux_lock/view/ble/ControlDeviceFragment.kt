@@ -56,25 +56,32 @@ class ControlDeviceFragment : BaseFragment() {
                when(status){
                    CHDeviceStatus.Locked -> {
                        binding.lockImage.setImageResource(R.drawable.ic_lock)
-                       binding.connectButton.isEnabled = false
-                       binding.connectButton.backgroundTintList = ColorStateList.valueOf(getColor(requireContext(), R.color.black))
+                       binding.connectButton.apply {
+                           isEnabled = false
+                           visibility = View.GONE
+                       }
                    }
+
                    CHDeviceStatus.Unlocked -> {
                        binding.lockImage.setImageResource(R.drawable.ic_unlock)
-                       binding.connectButton.isEnabled = false
-                       binding.connectButton.backgroundTintList = ColorStateList.valueOf(getColor(requireContext(), R.color.black))
+                       binding.connectButton.apply {
+                           isEnabled = false
+                           visibility = View.GONE
+                       }
                    }
                    CHDeviceStatus.NoBleSignal -> {
                        binding.lockImage.setImageResource(R.drawable.ic_no_signal)
-                       binding.connectButton.isEnabled = true
-                       binding.connectButton.backgroundTintList = ColorStateList.valueOf(getColor(requireContext(), R.color.tint_black))
-                   }
+                       binding.connectButton.apply {
+                           isEnabled = true
+                           visibility = View.VISIBLE
+                       }}
                    else -> {
                        Glide.with(requireActivity())
                            .load(R.raw.cycle_move)
                            .into(binding.lockImage)
-                       binding.connectButton.isEnabled = false
-                       binding.connectButton.backgroundTintList = ColorStateList.valueOf(getColor(requireContext(), R.color.black))
+                       binding.connectButton.apply {
+                           visibility = View.GONE
+                       }
                    }
                }
            }

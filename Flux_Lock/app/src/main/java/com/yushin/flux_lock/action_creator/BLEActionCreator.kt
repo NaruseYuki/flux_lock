@@ -80,6 +80,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
         // 明示的に接続する
         var isConnected = false
         currentDevice?.connect {
+            dispatcher.dispatch(BLEAction.ChangeBleStatus(currentDevice?.deviceStatus?:return@connect))
             it.onSuccess {
                 Log.d("BLE", "Device connected: $it")
                 dispatcher.dispatch(BLEAction.ConnectDevice(currentDevice?:return@onSuccess))
@@ -95,17 +96,14 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
         // 4. デリゲートを設定
         device.delegate = object : CHDeviceStatusDelegate {
             override fun onBleDeviceStatusChanged(device: CHDevices, status: CHDeviceStatus, shadowStatus: CHDeviceStatus?) {
+                dispatcher.dispatch(BLEAction.ChangeBleStatus(status))
                 // 2.のタイミングだと失敗するケースがあるため、以下のタイミングで接続するようにする
                 if (status == CHDeviceStatus.ReceivedAdV) {
                     if(!isConnected) {
                         device.connect {
                             it.onSuccess {
                                 Log.d("BLE", "Device connected: $it")
-                                dispatcher.dispatch(
-                                    BLEAction.ConnectDevice(
-                                        currentDevice ?: return@onSuccess
-                                    )
-                                )
+                                dispatcher.dispatch(BLEAction.ConnectDevice(device))
                             }
                             it.onFailure {
                                 Log.d("BLE", "Device connect failed: $it")
@@ -117,7 +115,6 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                 if (status == CHDeviceStatus.ReadyToRegister) {
                     registerDevice(device)
                 }
-                dispatcher.dispatch(BLEAction.ChangeBleStatus(status))
             }
         }
     }
@@ -254,6 +251,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
         // 明示的に接続する
         var isConnected = false
         currentDevice?.connect {
+            dispatcher.dispatch(BLEAction.ChangeBleStatus(currentDevice?.deviceStatus?:return@connect))
             it.onSuccess {
                 isConnected = true
                 Log.d("BLE", "Device connected: $it")
@@ -269,13 +267,14 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
         // 3. 新しいデバイスにデリゲートを設定
         currentDevice?.delegate = object : CHDeviceStatusDelegate {
             override fun onBleDeviceStatusChanged(device: CHDevices, status: CHDeviceStatus, shadowStatus: CHDeviceStatus?) {
+                dispatcher.dispatch(BLEAction.ChangeBleStatus(status))
                 // 2.のタイミングだと失敗するケースがあるため、以下のタイミングで接続するようにする
                 if (status == CHDeviceStatus.ReceivedAdV) {
                     if(!isConnected){
                         device.connect {
                             it.onSuccess {
                                 Log.d("BLE", "Device connected: $it")
-                                dispatcher.dispatch(BLEAction.ConnectDevice(currentDevice?:return@onSuccess))
+                                dispatcher.dispatch(BLEAction.ConnectDevice(device))
                             }
                             it.onFailure {
                                 Log.d("BLE", "Device connect failed: $it")
@@ -284,7 +283,6 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                         }
                     }
                 }
-                dispatcher.dispatch(BLEAction.ChangeBleStatus(status))
             }
 
             override fun onMechStatus(device: CHDevices) {
