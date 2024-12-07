@@ -1,5 +1,8 @@
 package com.yushin.flux_lock.view.ble
 
+import android.app.AlertDialog
+import android.content.DialogInterface
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -7,18 +10,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import androidx.core.content.ContextCompat.getColor
 import co.candyhouse.sesame.open.device.CHDeviceStatus
-import co.candyhouse.sesame.open.device.CHDevices
 import com.bumptech.glide.Glide
 import com.yushin.flux_lock.R
 import com.yushin.flux_lock.databinding.FragmentControlDeviceBinding
-import com.yushin.flux_lock.utils.SharedPreferencesHelper
 import com.yushin.flux_lock.utils.Utils.addTo
 import com.yushin.flux_lock.view.BLEActivity
-import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import io.reactivex.rxjava3.disposables.CompositeDisposable
-import java.util.UUID
 
 class ControlDeviceFragment : BaseFragment() {
     private lateinit var binding: FragmentControlDeviceBinding
@@ -55,15 +54,27 @@ class ControlDeviceFragment : BaseFragment() {
            .subscribe { status ->
                Log.d("BLE","@@@"+ status.toString())
                when(status){
-                   CHDeviceStatus.Locked -> binding.lockImage.setImageResource(R.drawable.ic_lock)
-                   CHDeviceStatus.Unlocked -> binding.lockImage.setImageResource(R.drawable.ic_unlock)
+                   CHDeviceStatus.Locked -> {
+                       binding.lockImage.setImageResource(R.drawable.ic_lock)
+                       binding.connectButton.isEnabled = false
+                       binding.connectButton.backgroundTintList = ColorStateList.valueOf(getColor(requireContext(), R.color.black))
+                   }
+                   CHDeviceStatus.Unlocked -> {
+                       binding.lockImage.setImageResource(R.drawable.ic_unlock)
+                       binding.connectButton.isEnabled = false
+                       binding.connectButton.backgroundTintList = ColorStateList.valueOf(getColor(requireContext(), R.color.black))
+                   }
                    CHDeviceStatus.NoBleSignal -> {
                        binding.lockImage.setImageResource(R.drawable.ic_no_signal)
+                       binding.connectButton.isEnabled = true
+                       binding.connectButton.backgroundTintList = ColorStateList.valueOf(getColor(requireContext(), R.color.brown))
                    }
                    else -> {
                        Glide.with(requireActivity())
                            .load(R.raw.cycle_move)
                            .into(binding.lockImage)
+                       binding.connectButton.isEnabled = false
+                       binding.connectButton.backgroundTintList = ColorStateList.valueOf(getColor(requireContext(), R.color.black))
                    }
                }
            }
@@ -157,15 +168,10 @@ class ControlDeviceFragment : BaseFragment() {
         }
 
         binding.deleteDevices.setOnClickListener {
-                /**
-                 * TODO 削除確認ダイアログを出す
-                 *  OK:セサミ初期化アクションを送る
-                 *      アクション成功時、端末からも情報削除する
-                 *      端末情報を削除できたら、index -1(>0)のロックに接続しに行く
-                 *      端末未登録時は、勝手に画面がnoDevicesFragmentに移行するので気にしなくて良い
-                 *      アクション失敗時、端末から情報は削除しない
-                 *  NO:ダイアログを閉じる
-                */
+            showDeleteDialog(getString(R.string.delete_confirm_title),
+                getString(R.string.delete_confirm_text),
+                getString(R.string.delete_confirm_ok)
+            )
         }
     }
 
@@ -179,5 +185,29 @@ class ControlDeviceFragment : BaseFragment() {
                 )
             )
         }
+    }
+
+    /**
+     * 削除確認ダイアログを出す
+     *  OK:端末からも情報削除する
+     *      成功時、セサミ初期化アクションを送る
+     *      端末情報をスマホから削除できたら、index -1(>0)のロックに接続しに行く
+     *      端末未登録時は、勝手に画面がnoDevicesFragmentに移行するので気にしなくて良い
+     *  NO:ダイアログを閉じる
+     */
+    private fun showDeleteDialog(title:String,
+                                 message:String,
+                                 button:String) {
+        val alertDialogBuilder = AlertDialog.Builder(requireContext())
+        alertDialogBuilder.setTitle(title)
+        alertDialogBuilder.setMessage(message)
+        alertDialogBuilder.setPositiveButton(button) { dialogInterface: DialogInterface, _: Int ->
+            //TODO アクション発行
+        }
+        alertDialogBuilder.setNegativeButton(getString(R.string.cancel)) { dialogInterface: DialogInterface, _: Int ->
+            dialogInterface.dismiss()
+        }
+        val alertDialog = alertDialogBuilder.create()
+        alertDialog.show()
     }
 }

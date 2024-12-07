@@ -41,4 +41,7 @@
     <string name="connect_index">connect_index</string>
     <string name="reconnect_text">再接続</string>
     <string name="connect_completed_text">に接続しました</string>
+    <string name="delete_confirm_title">確認</string>
+    <string name="delete_confirm_text">本当にこのロックを削除しますか?</string>
+    <string name="delete_confirm_ok">削除する</string>">
 </resources>
