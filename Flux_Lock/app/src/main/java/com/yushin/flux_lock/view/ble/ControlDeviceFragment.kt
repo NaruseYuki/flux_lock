@@ -22,13 +22,7 @@ import java.util.UUID
 
 class ControlDeviceFragment : BaseFragment() {
     private lateinit var binding: FragmentControlDeviceBinding
-    private lateinit var sharedPreferencesHelper: SharedPreferencesHelper
     private var selectedIndex = -1
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        sharedPreferencesHelper = SharedPreferencesHelper(requireContext())
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?

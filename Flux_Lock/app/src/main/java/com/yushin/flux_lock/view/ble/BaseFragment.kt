@@ -3,28 +3,33 @@ package com.yushin.flux_lock.view.ble
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.View
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.annotation.MainThread
 import com.yushin.flux_lock.action_creator.BLEActionCreator
 import com.yushin.flux_lock.store.BLEStore
+import com.yushin.flux_lock.store.DummyDevice
+import com.yushin.flux_lock.utils.SharedPreferencesHelper
+import com.yushin.flux_lock.utils.Utils.addTo
 import dagger.hilt.android.AndroidEntryPoint
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @AndroidEntryPoint
 open class BaseFragment : Fragment() {
-
-     lateinit var disposable : CompositeDisposable
-
+      var disposable : CompositeDisposable = CompositeDisposable()
      @Inject
      lateinit var bleStore: BLEStore
      @Inject
      lateinit var bleActionCreator: BLEActionCreator
+     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
 
-     override fun onDestroyView() {
-         bleStore.getConnectedDevice().value?.let { bleActionCreator.disconnect(it) }
-         disposable.dispose()
-         super.onDestroyView()
-     }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        sharedPreferencesHelper = SharedPreferencesHelper(requireContext())
+    }
 
     override fun onPause() {
         super.onPause()
@@ -33,7 +38,15 @@ open class BaseFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        disposable = CompositeDisposable()
+        if(disposable.isDisposed){
+            disposable = CompositeDisposable()
+        }
+        subscribeConnectedDevice()
+    }
+
+    override fun onDestroyView() {
+        disposable.dispose()
+        super.onDestroyView()
     }
 
      override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -62,4 +75,18 @@ open class BaseFragment : Fragment() {
     }
     protected fun isConnect(index:Int):Boolean
         = (bleStore.getConnectedDevice().value == bleStore.getRegisteredDevices().value?.get(index))
+
+    private fun subscribeConnectedDevice(){
+        bleStore.getConnectionComplete()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                Toast.makeText(requireContext(),
+                    "${bleStore.getConnectedDevice()
+                            .value?.deviceId?.let { it1 -> 
+                                sharedPreferencesHelper.getDeviceName(
+                                    it1) }}"
+                            + getString(com.yushin.flux_lock.R.string.connect_completed_text),
+                    Toast.LENGTH_SHORT).show()
+        }.addTo(disposable)
+    }
 }

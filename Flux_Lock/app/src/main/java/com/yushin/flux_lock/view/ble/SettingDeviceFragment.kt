@@ -35,12 +35,6 @@ class SettingDeviceFragment(private val chDevices: CHDevices) : BaseFragment() {
     @Inject
     lateinit var adapterFactory: MultiLayoutRecyclerAdapter.Factory
     private lateinit var multiAdapter: MultiLayoutRecyclerAdapter
-    private lateinit var sharedPreferencesHelper: SharedPreferencesHelper
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        sharedPreferencesHelper = SharedPreferencesHelper(requireContext())
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

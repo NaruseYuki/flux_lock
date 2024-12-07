@@ -21,12 +21,6 @@ class UnregisterDevicesFragment : BaseFragment() {
     private var recyclerView: RecyclerView? = null
     private lateinit var bleAdapter: BLEAdapter
     private lateinit var binding: FragmentUnregisteredDevicesBinding
-    private lateinit var sharedPreferencesHelper: SharedPreferencesHelper
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        sharedPreferencesHelper = SharedPreferencesHelper(requireContext())
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?

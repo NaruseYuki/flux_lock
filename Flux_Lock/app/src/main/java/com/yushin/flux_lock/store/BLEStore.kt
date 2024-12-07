@@ -9,11 +9,12 @@ import co.candyhouse.sesame.open.device.CHDevices
 import co.candyhouse.sesame.open.device.CHProductModel
 import co.candyhouse.sesame.open.device.CHSesameProtocolMechStatus
 import co.candyhouse.sesame.server.dto.CHEmpty
+import com.jakewharton.rxrelay3.BehaviorRelay
+import com.jakewharton.rxrelay3.PublishRelay
 import com.yushin.flux_lock.action.BLEAction
 import com.yushin.flux_lock.dispatcher.BLEDispatcher
 import com.yushin.flux_lock.utils.Utils.addTo
 import io.reactivex.rxjava3.disposables.CompositeDisposable
-import io.reactivex.rxjava3.subjects.BehaviorSubject
 import io.reactivex.rxjava3.subjects.PublishSubject
 import java.util.UUID
 import javax.inject.Inject
@@ -25,17 +26,18 @@ class BLEStore @Inject constructor(
 ) {
     // 未登録デバイス
     private val unRegisteredDevices = mutableListOf<CHDevices>()
-    private val unRegisteredSubject = BehaviorSubject.createDefault(unRegisteredDevices)
+    private val unRegisteredSubject = BehaviorRelay.createDefault(unRegisteredDevices)
 
     // 登録デバイス
     private val registeredDevices = mutableListOf<CHDevices>()
-    private val registeredSubject = BehaviorSubject.createDefault(registeredDevices)
+    private val registeredSubject = BehaviorRelay.createDefault(registeredDevices)
 
     // 接続デバイス
-    private var connectedSubject = BehaviorSubject.create<CHDevices?>()
+    private var connectedSubject = BehaviorRelay.create<CHDevices?>()
+    private var connectionComplete = PublishRelay.create<Unit>()
 
     // デバイスステータス
-    var bleStatusSubject = BehaviorSubject.create<CHDeviceStatus>()
+    var bleStatusSubject = BehaviorRelay.create<CHDeviceStatus>()
 
     // ローディング中フラグ
     val loadingSubject = PublishSubject.create<Boolean>()
@@ -71,7 +73,6 @@ class BLEStore @Inject constructor(
     private fun disconnectDevice(device: CHDevices) {
         // nullを入れると例外エラーが投げられるので、切断時はdummyを入れておく
         val dummy:CHDevices = DummyDevice()
-        connectedSubject.onNext(dummy)
         Log.d("BLE", "disconnect: $device")
     }
 
@@ -82,30 +83,25 @@ class BLEStore @Inject constructor(
     private fun loadRegisteredDevices(devices:List<CHDevices>) {
         registeredDevices.clear()
         registeredDevices.addAll(devices)
-        registeredSubject.onNext(registeredDevices)
+        registeredSubject.accept(registeredDevices)
     }
 
     private fun loadUnregisteredDevices(devices:List<CHDevices>) {
         unRegisteredDevices.clear()
         unRegisteredDevices.addAll(devices)
-        unRegisteredSubject.onNext(unRegisteredDevices)
+        unRegisteredSubject.accept(unRegisteredDevices)
     }
 
     private fun registerDevice(device: CHDevices) {
         //登録成功したデバイスをストアに反映する
         registeredDevices.add(device)
-        registeredSubject.onNext(registeredDevices)
+        registeredSubject.accept(registeredDevices)
         Log.d("BLE", "registerDevice: $registeredDevices")
 
     }
 
     private fun checkDeviceStatus(device: CHDevices) {
-//        val list = mutableListOf(
-//            (device as? CHSesame5)?.mechSetting?.lockPosition,
-//            (device as? CHSesame5)?.mechSetting?.unlockPosition,
-//            (device as? CHSesame5)?.mechSetting?.autoLockSecond
-//        )
-        connectedSubject.onNext(device)
+        connectedSubject.accept(device)
         Log.d("BLE", "@@@_$connectedSubject")
     }
 
@@ -122,8 +118,10 @@ class BLEStore @Inject constructor(
     }
 
     private fun connectDevice(device: CHDevices) {
-        connectedSubject.onNext(device)
+        connectedSubject.accept(device)
+        connectionComplete.accept(Unit)
         Log.d("BLE", "@@@_$connectedSubject")
+
     }
 
     private fun scanDevices() {
@@ -146,17 +144,19 @@ class BLEStore @Inject constructor(
     }
 
     private fun changeBleStatus(status: CHDeviceStatus) {
-        bleStatusSubject.onNext(status)
+        bleStatusSubject.accept(status)
     }
 
     // 未登録デバイスのリストを取得する
-    fun getUnregisteredDevices(): BehaviorSubject<MutableList<CHDevices>> = unRegisteredSubject
+    fun getUnregisteredDevices(): BehaviorRelay<MutableList<CHDevices>> = unRegisteredSubject
 
     // 登録デバイスのリストを取得する
-    fun getRegisteredDevices(): BehaviorSubject<MutableList<CHDevices>> = registeredSubject
+    fun getRegisteredDevices(): BehaviorRelay<MutableList<CHDevices>> = registeredSubject
 
     // 接続デバイスを取得する
     fun getConnectedDevice() = connectedSubject
+
+    fun getConnectionComplete() = connectionComplete
 
 }
 

@@ -77,38 +77,47 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
         // 2. 現在のデバイスを更新
         currentDevice = device
 
-        // 3. 新しいデバイスに接続
+        // 明示的に接続する
+        var isConnected = false
         currentDevice?.connect {
             it.onSuccess {
                 Log.d("BLE", "Device connected: $it")
                 dispatcher.dispatch(BLEAction.ConnectDevice(currentDevice?:return@onSuccess))
-
-                // 4. デリゲートを設定
-                device.delegate = object : CHDeviceStatusDelegate {
-                    override fun onBleDeviceStatusChanged(device: CHDevices, status: CHDeviceStatus, shadowStatus: CHDeviceStatus?) {
-                        // 2.のタイミングだと失敗するケースがあるため、以下のタイミングで接続するようにする
-                        if (status == CHDeviceStatus.ReceivedAdV) {
-                            device.connect {
-                                it.onSuccess {
-                                    Log.d("BLE", "Device connected: $it")
-                                    dispatcher.dispatch(BLEAction.ConnectDevice(currentDevice?:return@onSuccess))
-                                }
-                                it.onFailure {
-                                    Log.d("BLE", "Device connect failed: $it")
-                                    // TODO: 失敗時にエラーを流す処理
-                                }
-                            }
-                        }
-                        if (status == CHDeviceStatus.ReadyToRegister) {
-                            registerDevice(device)
-                        }
-                        dispatcher.dispatch(BLEAction.ChangeBleStatus(status))
-                    }
-                }
+                isConnected = true
             }
             it.onFailure {
                 Log.d("BLE", "Device connect failed: $it")
+                isConnected = false
                 // TODO: 失敗時にエラーを流す処理
+            }
+        }
+
+        // 4. デリゲートを設定
+        device.delegate = object : CHDeviceStatusDelegate {
+            override fun onBleDeviceStatusChanged(device: CHDevices, status: CHDeviceStatus, shadowStatus: CHDeviceStatus?) {
+                // 2.のタイミングだと失敗するケースがあるため、以下のタイミングで接続するようにする
+                if (status == CHDeviceStatus.ReceivedAdV) {
+                    if(!isConnected) {
+                        device.connect {
+                            it.onSuccess {
+                                Log.d("BLE", "Device connected: $it")
+                                dispatcher.dispatch(
+                                    BLEAction.ConnectDevice(
+                                        currentDevice ?: return@onSuccess
+                                    )
+                                )
+                            }
+                            it.onFailure {
+                                Log.d("BLE", "Device connect failed: $it")
+                                // TODO: 失敗時にエラーを流す処理
+                            }
+                        }
+                    }
+                }
+                if (status == CHDeviceStatus.ReadyToRegister) {
+                    registerDevice(device)
+                }
+                dispatcher.dispatch(BLEAction.ChangeBleStatus(status))
             }
         }
     }
@@ -243,12 +252,15 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
         currentDevice = device
 
         // 明示的に接続する
+        var isConnected = false
         currentDevice?.connect {
             it.onSuccess {
+                isConnected = true
                 Log.d("BLE", "Device connected: $it")
                 dispatcher.dispatch(BLEAction.ConnectDevice(currentDevice?:return@onSuccess))
             }
             it.onFailure {
+                isConnected = false
                 Log.d("BLE", "Device connect failed: $it")
                 // TODO: 失敗時にエラーを流す処理
             }
@@ -259,14 +271,16 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
             override fun onBleDeviceStatusChanged(device: CHDevices, status: CHDeviceStatus, shadowStatus: CHDeviceStatus?) {
                 // 2.のタイミングだと失敗するケースがあるため、以下のタイミングで接続するようにする
                 if (status == CHDeviceStatus.ReceivedAdV) {
-                    device.connect {
-                        it.onSuccess {
-                            Log.d("BLE", "Device connected: $it")
-                            dispatcher.dispatch(BLEAction.ConnectDevice(currentDevice?:return@onSuccess))
-                        }
-                        it.onFailure {
-                            Log.d("BLE", "Device connect failed: $it")
-                            // TODO: 失敗時にエラーを流す処理
+                    if(!isConnected){
+                        device.connect {
+                            it.onSuccess {
+                                Log.d("BLE", "Device connected: $it")
+                                dispatcher.dispatch(BLEAction.ConnectDevice(currentDevice?:return@onSuccess))
+                            }
+                            it.onFailure {
+                                Log.d("BLE", "Device connect failed: $it")
+                                // TODO: 失敗時にエラーを流す処理
+                            }
                         }
                     }
                 }
