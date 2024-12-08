@@ -35,14 +35,14 @@ class BLEStore @Inject constructor(
     private val registeredSubject = BehaviorRelay.createDefault(registeredDevices)
 
     // 接続デバイス
-    private var connectedSubject = BehaviorRelay.create<CHDevices?>()
-    private var connectionComplete = PublishRelay.create<Unit>()
+    private val connectedSubject = BehaviorRelay.create<CHDevices?>()
+    private val connectionComplete = PublishRelay.create<Unit>()
 
     // 初期化処理結果
     private var deviceInitResetResult = PublishRelay.create<Boolean>()
     private var deviceInitDropKeyResult = PublishRelay.create<Unit>()
-    private var deviceInitResult = PublishRelay.create<Boolean>()
 
+    private val errorSubject = PublishRelay.create<BaseException>()
 
     // デバイスステータス
     var bleStatusSubject = BehaviorRelay.create<CHDeviceStatus>()
@@ -76,7 +76,6 @@ class BLEStore @Inject constructor(
             is BLEAction.Reset -> reset(action.result)
             is BLEAction.DropKey -> dropKey(action.device)
             is BaseException -> throwError(action)
-            is Exception -> throwError(action)
         }
     }
 
@@ -172,8 +171,9 @@ class BLEStore @Inject constructor(
         deviceInitDropKeyResult.accept(Unit)
     }
 
-    private fun throwError(error:Exception){
+    private fun throwError(error:BaseException){
         Log.d("BLE", "throwError: ${error.message}")
+        errorSubject.accept(error)
     }
 
 

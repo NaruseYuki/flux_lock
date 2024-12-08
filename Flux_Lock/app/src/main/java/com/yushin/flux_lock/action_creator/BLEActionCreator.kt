@@ -25,7 +25,8 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
 
     private var currentDevice: CHDevices? = null // 現在接続中のデバイスを追跡
     private var conCnt = 0 //接続試行回数
-    private var toggleCnt = 0 // toggle試行回数
+    private var toggleCnt = 0 // ロック操作試行回数
+    private var registerCnt = 0 // 登録試行回数
 
     // 未登録デバイスの取得アクションを生成し、ディスパッチ
     fun loadUnregisteredDevices() {
@@ -100,6 +101,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                     if(!isConnected) {
                         device.connect {
                             it.onSuccess {
+                                conCnt = 0
                                 Log.d("BLE", "Device connected: $it")
                                 dispatcher.dispatch(BLEAction.ConnectDevice(device))
                             }
@@ -112,6 +114,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                                 }else{
                                     dispatcher.dispatch(BLEAction.ThrowException(
                                         BaseException.ConnectionException("Device connect failed")))
+                                    disconnect(device)
                                     conCnt = 0
                                 }
                             }
@@ -233,6 +236,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
     private fun registerDevice(device: CHDevices) {
         device.register {
             it.onSuccess {
+                registerCnt = 0
                 // configureFirstLockPosition(device)
                 //  登録成功
                 Log.d("BLE", "registerDevice: $it")
@@ -244,7 +248,14 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
             it.onFailure {
                 Log.d("BLE", "registerDevice failed: $it")
                 //  登録失敗
-                // TODO 失敗したらエラーを流すようにしたい
+                if(registerCnt < REGISTER_MAX ){
+                    registerCnt += 1
+                    registerDevice(device)
+                }else{
+                    registerCnt = 0
+                    dispatcher.dispatch(BLEAction.ThrowException(
+                        BaseException.RegistrationException("registerDevice failed")))
+                }
             }
         }
     }
@@ -283,6 +294,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                     if(!isConnected){
                         device.connect {
                             it.onSuccess {
+                                conCnt = 0
                                 Log.d("BLE", "Device connected: $it")
                                 dispatcher.dispatch(BLEAction.ConnectDevice(device))
                             }
@@ -295,6 +307,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                                 }else{
                                     dispatcher.dispatch(BLEAction.ThrowException(
                                         BaseException.ConnectionException("Device connect failed")))
+                                    disconnect(device)
                                     conCnt = 0
                                 }
                             }
@@ -314,6 +327,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
         when(device){
             is CHSesame5 -> device.toggle {
                 it.onSuccess {
+                    toggleCnt = 0
                     Log.d("BLE", "toggle: $it")
                     dispatcher.dispatch(BLEAction.Toggle(device))
                 }
@@ -326,6 +340,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                     }else{
                         dispatcher.dispatch(BLEAction.ThrowException(
                             BaseException.SmartLockOperationException("toggle failed")))
+                        disconnect(device)
                         toggleCnt = 0
                     }
                 }
@@ -333,6 +348,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
             }
             is CHSesame2 -> device.toggle {
                 it.onSuccess {
+                    toggleCnt = 0
                     Log.d("BLE", "toggle: $it")
                     dispatcher.dispatch(BLEAction.Toggle(device))
                 }
@@ -345,6 +361,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                     }else{
                         dispatcher.dispatch(BLEAction.ThrowException(
                             BaseException.SmartLockOperationException("toggle failed")))
+                        disconnect(device)
                         toggleCnt = 0
                     }
                 }
@@ -382,7 +399,8 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
     }
 
     companion object {
-        const val CONNECT_MAX = 5 // 接続試行回数 max
-        const val TOGGLE_MAX = 5 // TOGGLE試行回数 max
+        const val CONNECT_MAX = 10 // 接続試行回数 max
+        const val TOGGLE_MAX = 10 // TOGGLE試行回数 max
+        const val REGISTER_MAX = 10 // 登録試行回数 max
     }
 }
