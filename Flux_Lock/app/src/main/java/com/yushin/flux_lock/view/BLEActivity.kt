@@ -23,6 +23,7 @@ import com.yushin.flux_lock.view.ble.NoDevicesFragment
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -156,9 +157,8 @@ class BLEActivity : AppCompatActivity() {
 
     private fun displayElements() {
         bleStore.getRegisteredDevices()
-            .skip(1)
             .observeOn(AndroidSchedulers.mainThread())
-                .subscribe{
+            .subscribe{
                     if (it.isNotEmpty()) {
                         // ControlDeviceFragmentを表示する
                         // 全てのフラグメントをバックスタックから削除

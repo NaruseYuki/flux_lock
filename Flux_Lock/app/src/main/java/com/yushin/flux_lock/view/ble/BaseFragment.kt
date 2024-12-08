@@ -5,16 +5,13 @@ import androidx.fragment.app.Fragment
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.annotation.MainThread
 import com.yushin.flux_lock.action_creator.BLEActionCreator
 import com.yushin.flux_lock.store.BLEStore
-import com.yushin.flux_lock.store.DummyDevice
 import com.yushin.flux_lock.utils.SharedPreferencesHelper
 import com.yushin.flux_lock.utils.Utils.addTo
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.CompositeDisposable
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -42,6 +39,7 @@ open class BaseFragment : Fragment() {
             disposable = CompositeDisposable()
         }
         subscribeConnectedDevice()
+        subscribeDeviceInitResult()
     }
 
     override fun onDestroyView() {
@@ -80,13 +78,29 @@ open class BaseFragment : Fragment() {
         bleStore.getConnectionComplete()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe {
-                Toast.makeText(requireContext(),
-                    "${bleStore.getConnectedDevice()
-                            .value?.deviceId?.let { it1 -> 
-                                sharedPreferencesHelper.getDeviceName(
-                                    it1) }}"
-                            + getString(com.yushin.flux_lock.R.string.connect_completed_text),
-                    Toast.LENGTH_SHORT).show()
+                createToast("${bleStore.getConnectedDevice()
+                    .value?.deviceId?.let { it1 ->
+                        sharedPreferencesHelper.getDeviceName(
+                            it1) }}"
+                        + "\n" +
+                        getString(com.yushin.flux_lock.R.string.connect_completed_text))
         }.addTo(disposable)
     }
+
+    private fun subscribeDeviceInitResult(){
+        bleStore.getDeviceInitResult()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { result ->
+                val text = if(!result){
+                    "ロックを初期化できませんでした\nロックのボタンを長押しして初期化してください"
+                } else{
+                    "ロックを初期化しました"
+                }
+                createToast(text)
+            }
+            .addTo(disposable)
+    }
+
+    protected fun createToast(message:String)
+        = Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
 }

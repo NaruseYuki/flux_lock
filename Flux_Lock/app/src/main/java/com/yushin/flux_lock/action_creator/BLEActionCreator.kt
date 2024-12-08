@@ -11,6 +11,7 @@ import co.candyhouse.sesame.open.device.CHSesame2
 import co.candyhouse.sesame.open.device.CHSesame5
 import com.yushin.flux_lock.action.BLEAction
 import com.yushin.flux_lock.dispatcher.BLEDispatcher
+import com.yushin.flux_lock.exception.BaseException
 import com.yushin.flux_lock.utils.LockState
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -23,6 +24,8 @@ import javax.inject.Singleton
 class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatcher) {
 
     private var currentDevice: CHDevices? = null // 現在接続中のデバイスを追跡
+    private var conCnt = 0 //接続試行回数
+    private var toggleCnt = 0 // toggle試行回数
 
     // 未登録デバイスの取得アクションを生成し、ディスパッチ
     fun loadUnregisteredDevices() {
@@ -38,11 +41,6 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
         dispatcher.dispatch(BLEAction.StartLoading)
         CHDeviceManager.getCandyDevices { it ->
             it.onSuccess {
-                /**
-                 TODO:
-                 登録時（registerDevice）するタイミングでsharedPreferenceに
-                 登録名を保存する
-                 */
                 dispatcher.dispatch(BLEAction.LoadRegisteredDevices(it.data))
                 dispatcher.dispatch(BLEAction.FinishLoading)
             }
@@ -89,12 +87,12 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
             it.onFailure {
                 Log.d("BLE", "Device connect failed: $it")
                 isConnected = false
-                // TODO: 失敗時にエラーを流す処理
+                // ここで失敗してもなにもしない
             }
         }
 
         // 4. デリゲートを設定
-        device.delegate = object : CHDeviceStatusDelegate {
+        currentDevice?.delegate = object : CHDeviceStatusDelegate {
             override fun onBleDeviceStatusChanged(device: CHDevices, status: CHDeviceStatus, shadowStatus: CHDeviceStatus?) {
                 dispatcher.dispatch(BLEAction.ChangeBleStatus(status))
                 // 2.のタイミングだと失敗するケースがあるため、以下のタイミングで接続するようにする
@@ -107,7 +105,15 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                             }
                             it.onFailure {
                                 Log.d("BLE", "Device connect failed: $it")
-                                // TODO: 失敗時にエラーを流す処理
+                                // 再試行する
+                                if(conCnt < CONNECT_MAX){
+                                    conCnt += 1
+                                    firstConnectDevice(device)
+                                }else{
+                                    dispatcher.dispatch(BLEAction.ThrowException(
+                                        BaseException.ConnectionException("Device connect failed")))
+                                    conCnt = 0
+                                }
                             }
                         }
                     }
@@ -230,9 +236,13 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                 // configureFirstLockPosition(device)
                 //  登録成功
                 Log.d("BLE", "registerDevice: $it")
+                // 再読み込み
+                loadRegisteredDevices()
+                // ↓ ログ出すだけ
                 dispatcher.dispatch(BLEAction.RegisterDevice(device))
             }
             it.onFailure {
+                Log.d("BLE", "registerDevice failed: $it")
                 //  登録失敗
                 // TODO 失敗したらエラーを流すようにしたい
             }
@@ -260,7 +270,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
             it.onFailure {
                 isConnected = false
                 Log.d("BLE", "Device connect failed: $it")
-                // TODO: 失敗時にエラーを流す処理
+                // ここでは失敗してもエラーを流さない
             }
         }
 
@@ -278,7 +288,15 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                             }
                             it.onFailure {
                                 Log.d("BLE", "Device connect failed: $it")
-                                // TODO: 失敗時にエラーを流す処理
+                                // 再試行する
+                                if(conCnt < CONNECT_MAX){
+                                    conCnt += 1
+                                    subscribeDeviceStatus(device)
+                                }else{
+                                    dispatcher.dispatch(BLEAction.ThrowException(
+                                        BaseException.ConnectionException("Device connect failed")))
+                                    conCnt = 0
+                                }
                             }
                         }
                     }
@@ -301,8 +319,17 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                 }
                 it.onFailure {
                     Log.d("BLE", "toggle failed: $it")
-                    // TODO 失敗したらエラーを流すようにしたい
+                    // 再試行する
+                    if(toggleCnt < TOGGLE_MAX){
+                        toggleCnt += 1
+                        toggle(device)
+                    }else{
+                        dispatcher.dispatch(BLEAction.ThrowException(
+                            BaseException.SmartLockOperationException("toggle failed")))
+                        toggleCnt = 0
+                    }
                 }
+
             }
             is CHSesame2 -> device.toggle {
                 it.onSuccess {
@@ -311,9 +338,51 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                 }
                 it.onFailure {
                     Log.d("BLE", "toggle failed: $it")
-                    // TODO 失敗したらエラーを流すようにしたい
+                    // 再試行する
+                    if(toggleCnt < TOGGLE_MAX){
+                        toggleCnt += 1
+                        toggle(device)
+                    }else{
+                        dispatcher.dispatch(BLEAction.ThrowException(
+                            BaseException.SmartLockOperationException("toggle failed")))
+                        toggleCnt = 0
+                    }
                 }
             }
         }
+    }
+
+    fun resetLock(device: CHDevices){
+        currentDevice?.reset {
+            it.onSuccess {
+                dispatcher.dispatch(BLEAction.Reset(true))
+            }
+            it.onFailure {
+                dispatcher.dispatch(BLEAction.Reset(false))
+            }
+            dropKey(device)
+        }
+    }
+
+    /**
+     * SesameSDKの内部データベースに保存されてるこのセサミデバイスの鍵を破棄する
+     * 再度何処かから同じ鍵を取ってこれば再度使える状態になる
+     */
+    private fun dropKey(device: CHDevices){
+        device.dropKey {
+            it.onSuccess {
+                Log.d("BLE", "dropKey: $it")
+            }
+            it.onFailure {
+                Log.d("BLE", "dropKey failed: $it")
+            }
+        }
+        dispatcher.dispatch(BLEAction.DropKey(device))
+        loadRegisteredDevices()
+    }
+
+    companion object {
+        const val CONNECT_MAX = 5 // 接続試行回数 max
+        const val TOGGLE_MAX = 5 // TOGGLE試行回数 max
     }
 }

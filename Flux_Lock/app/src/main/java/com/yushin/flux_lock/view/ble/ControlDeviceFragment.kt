@@ -196,8 +196,9 @@ class ControlDeviceFragment : BaseFragment() {
 
     /**
      * 削除確認ダイアログを出す
-     *  OK:端末からも情報削除する
-     *      成功時、セサミ初期化アクションを送る
+     *  OK:
+     *      成功時、端末から情報削除する（未接続でも可能）
+     *      セサミ初期化アクションを送る（接続していないとできない）
      *      端末情報をスマホから削除できたら、index -1(>0)のロックに接続しに行く
      *      端末未登録時は、勝手に画面がnoDevicesFragmentに移行するので気にしなくて良い
      *  NO:ダイアログを閉じる
@@ -208,8 +209,25 @@ class ControlDeviceFragment : BaseFragment() {
         val alertDialogBuilder = AlertDialog.Builder(requireContext())
         alertDialogBuilder.setTitle(title)
         alertDialogBuilder.setMessage(message)
-        alertDialogBuilder.setPositiveButton(button) { dialogInterface: DialogInterface, _: Int ->
-            //TODO アクション発行
+        alertDialogBuilder.setPositiveButton(button) { _: DialogInterface, _: Int ->
+            // selectedIndexを信頼する
+            // connectedSubject.valueはnullのタイミングがあるので
+            // 未接続時も削除できるようにbleStore.getRegisteredDevices().valueを毎回使う
+            val devices = bleStore.getRegisteredDevices().value
+            val device = devices?.get(selectedIndex)
+            val deviceId = device?.deviceId
+            device?.let { bleActionCreator.resetLock(it) }
+            if (deviceId != null) {
+                sharedPreferencesHelper.removeDevice(deviceId)
+            }
+            if(((devices?.size?.minus(1)) ?: 0) >= 0){
+                selectedIndex = 0
+                sharedPreferencesHelper.saveConnectIndex(selectedIndex)
+            } else{
+                return@setPositiveButton
+            }
+
+            createDeviceList()
         }
         alertDialogBuilder.setNegativeButton(getString(R.string.cancel)) { dialogInterface: DialogInterface, _: Int ->
             dialogInterface.dismiss()

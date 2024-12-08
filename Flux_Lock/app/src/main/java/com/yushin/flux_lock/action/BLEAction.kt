@@ -2,6 +2,7 @@ package com.yushin.flux_lock.action
 
 import co.candyhouse.sesame.open.device.CHDeviceStatus
 import co.candyhouse.sesame.open.device.CHDevices
+import com.yushin.flux_lock.exception.BaseException
 
 /**
  * アプリ内のアクションを定義するクラス
@@ -34,22 +35,20 @@ sealed class BLEAction {
     // 接続実行
     data class ConnectDevice(val device: CHDevices) : BLEAction()
 
-    // 施錠操作
-    // TODO:引数のクラスを決定する
-    data object LockDevice:BLEAction()
-
-    // 開錠操作
-    // TODO:引数のクラスを決定する
-    data object UnlockDevice:BLEAction()
-
     // デバイスの状態を確認する
     data class CheckDeviceStatus(val device: CHDevices) : BLEAction()
 
-    // デバイスをDBに登録する
     data class RegisterDevice(val device: CHDevices):BLEAction()
 
     data class ChangeBleStatus(val status: CHDeviceStatus):BLEAction()
 
     data class DisconnectDevice(val device: CHDevices) : BLEAction()
+
+    data class Reset(val result: Boolean) : BLEAction()
+
+    data class DropKey(val device: CHDevices) : BLEAction()
+
+    data class ThrowException(val exception: BaseException) : BLEAction()
+
 
 }

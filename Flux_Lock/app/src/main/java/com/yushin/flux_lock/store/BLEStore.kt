@@ -13,9 +13,11 @@ import com.jakewharton.rxrelay3.BehaviorRelay
 import com.jakewharton.rxrelay3.PublishRelay
 import com.yushin.flux_lock.action.BLEAction
 import com.yushin.flux_lock.dispatcher.BLEDispatcher
+import com.yushin.flux_lock.exception.BaseException
 import com.yushin.flux_lock.utils.Utils.addTo
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.subjects.PublishSubject
+import io.reactivex.rxjava3.core.Observable
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -36,6 +38,12 @@ class BLEStore @Inject constructor(
     private var connectedSubject = BehaviorRelay.create<CHDevices?>()
     private var connectionComplete = PublishRelay.create<Unit>()
 
+    // 初期化処理結果
+    private var deviceInitResetResult = PublishRelay.create<Boolean>()
+    private var deviceInitDropKeyResult = PublishRelay.create<Unit>()
+    private var deviceInitResult = PublishRelay.create<Boolean>()
+
+
     // デバイスステータス
     var bleStatusSubject = BehaviorRelay.create<CHDeviceStatus>()
 
@@ -51,7 +59,7 @@ class BLEStore @Inject constructor(
             }.addTo(disposables)
     }
 
-    private fun on(action: BLEAction) {
+    private fun <T>on(action: T) {
         when (action) {
             is BLEAction.StartLoading -> startLoading()
             is BLEAction.FinishLoading -> finishLoading()
@@ -60,13 +68,15 @@ class BLEStore @Inject constructor(
             is BLEAction.ScanDevices -> scanDevices()
             is BLEAction.StopScanDevices -> stopScanDevices()
             is BLEAction.ConnectDevice -> connectDevice(action.device)
-            is BLEAction.LockDevice -> lockDevice()
-            is BLEAction.UnlockDevice -> unlockDevice()
             is BLEAction.CheckDeviceStatus -> checkDeviceStatus(action.device)
             is BLEAction.RegisterDevice -> registerDevice(action.device)
             is BLEAction.ChangeBleStatus -> changeBleStatus(action.status)
             is BLEAction.Toggle -> toggle(action.device)
-            is BLEAction.DisconnectDevice ->disconnectDevice(action.device)
+            is BLEAction.DisconnectDevice -> disconnectDevice(action.device)
+            is BLEAction.Reset -> reset(action.result)
+            is BLEAction.DropKey -> dropKey(action.device)
+            is BaseException -> throwError(action)
+            is Exception -> throwError(action)
         }
     }
 
@@ -94,10 +104,7 @@ class BLEStore @Inject constructor(
 
     private fun registerDevice(device: CHDevices) {
         //登録成功したデバイスをストアに反映する
-        registeredDevices.add(device)
-        registeredSubject.accept(registeredDevices)
-        Log.d("BLE", "registerDevice: $registeredDevices")
-
+        Log.d("BLE", "registerDevice: $device")
     }
 
     private fun checkDeviceStatus(device: CHDevices) {
@@ -147,6 +154,29 @@ class BLEStore @Inject constructor(
         bleStatusSubject.accept(status)
     }
 
+    private fun reset(result: Boolean) {
+        if(result){
+            Log.d("BLE", "セサミのリセットに成功した")
+
+        }else{
+            Log.d("BLE", "セサミのリセットに失敗した")
+        }
+        deviceInitResetResult.accept(result)
+    }
+
+    private fun dropKey(device: CHDevices) {
+        //登録成功したデバイスをストアに反映する
+        registeredDevices.remove(device)
+        registeredSubject.accept(registeredDevices)
+        connectedSubject.accept(DummyDevice())
+        deviceInitDropKeyResult.accept(Unit)
+    }
+
+    private fun throwError(error:Exception){
+        Log.d("BLE", "throwError: ${error.message}")
+    }
+
+
     // 未登録デバイスのリストを取得する
     fun getUnregisteredDevices(): BehaviorRelay<MutableList<CHDevices>> = unRegisteredSubject
 
@@ -156,8 +186,16 @@ class BLEStore @Inject constructor(
     // 接続デバイスを取得する
     fun getConnectedDevice() = connectedSubject
 
+    // 接続が完了したことを通知する
     fun getConnectionComplete() = connectionComplete
 
+    // デバイスの初期化が完了した
+    fun getDeviceInitResult() = Observable.zip(
+        deviceInitResetResult,
+        deviceInitDropKeyResult
+    ) { resetResult, _ ->
+        resetResult // dropKeyResult を無視
+    }
 }
 
 // ダミーデバイスのクラス定義

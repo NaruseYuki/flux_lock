@@ -68,9 +68,7 @@ class SettingDeviceFragment(private val chDevices: CHDevices) : BaseFragment() {
             ViewTypeCell.OKButton(getString(R.string.input_device_setting_ok)){
                 val name = (items[1] as ViewTypeCell.EditText).text
                 saveDeviceNameIfChanged(name, chDevices)
-                Toast.makeText(requireContext(),
-                    getString(R.string.input_device_setting_complete),
-                    Toast.LENGTH_SHORT).show()
+                createToast(getString(R.string.input_device_setting_complete))
                 // 操作画面へ遷移
                 back()
             }
