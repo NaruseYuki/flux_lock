@@ -7,7 +7,9 @@ import android.view.ViewGroup
 import com.yushin.flux_lock.R
 import com.yushin.flux_lock.databinding.FragmentNoDevicesBinding
 import com.yushin.flux_lock.databinding.FragmentRegisterCompletedBinding
+import com.yushin.flux_lock.utils.Utils.addTo
 import com.yushin.flux_lock.view.BLEActivity
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 
 class RegisterCompletedFragment : BaseFragment() {
@@ -18,5 +20,18 @@ class RegisterCompletedFragment : BaseFragment() {
     ): View? {
         binding = FragmentRegisterCompletedBinding.inflate(inflater,container,false)
         return binding.root
+    }
+
+    override fun onResume() {
+        super.onResume()
+        binding.progressBar.visibility = View.VISIBLE
+        binding.completeText.visibility = View.GONE
+        bleStore.getRegisterCompleteSubject()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                binding.completeText.visibility = View.VISIBLE
+                binding.progressBar.visibility = View.GONE
+            }
+            .addTo(disposable)
     }
 }

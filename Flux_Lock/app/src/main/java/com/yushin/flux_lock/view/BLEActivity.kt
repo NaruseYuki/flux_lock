@@ -158,6 +158,7 @@ class BLEActivity : AppCompatActivity() {
     private fun displayElements() {
         bleStore.getRegisteredDevices()
             .observeOn(AndroidSchedulers.mainThread())
+            .delay(500, TimeUnit.MILLISECONDS)
             .subscribe{
                     if (it.isNotEmpty()) {
                         // ControlDeviceFragmentを表示する
@@ -170,18 +171,6 @@ class BLEActivity : AppCompatActivity() {
                     }
                 }
                 .addTo(disposable)
-
-        bleStore.loadingSubject
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe{
-                if(it){
-                    binding.progressBar.visibility = View.VISIBLE
-                }else{
-                    binding.progressBar.visibility = View.GONE
-                }
-            }
-            .addTo(disposable)
-
     }
 
      fun navigateFragment(fragmentId:Int,fragment: Fragment) {

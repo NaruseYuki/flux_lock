@@ -33,6 +33,7 @@ class BLEStore @Inject constructor(
     // 登録デバイス
     private val registeredDevices = mutableListOf<CHDevices>()
     private val registeredSubject = BehaviorRelay.createDefault(registeredDevices)
+    private val registerCompleteSubject = BehaviorRelay.create<Unit>()
 
     // 接続デバイス
     private val connectedSubject = BehaviorRelay.create<CHDevices?>()
@@ -103,6 +104,7 @@ class BLEStore @Inject constructor(
 
     private fun registerDevice(device: CHDevices) {
         //登録成功したデバイスをストアに反映する
+        registerCompleteSubject.accept(Unit)
         Log.d("BLE", "registerDevice: $device")
     }
 
@@ -196,6 +198,8 @@ class BLEStore @Inject constructor(
     ) { resetResult, _ ->
         resetResult // dropKeyResult を無視
     }
+
+    fun getRegisterCompleteSubject() = registerCompleteSubject
 }
 
 // ダミーデバイスのクラス定義

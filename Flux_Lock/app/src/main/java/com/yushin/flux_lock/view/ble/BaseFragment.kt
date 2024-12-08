@@ -92,9 +92,9 @@ open class BaseFragment : Fragment() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { result ->
                 val text = if(!result){
-                    "ロックを初期化できませんでした\nロックのボタンを長押しして初期化してください"
+                    "ロックをアプリから削除しました。\nロックを初期化できませんでした\nロックのボタンを長押しして初期化してください"
                 } else{
-                    "ロックを初期化しました"
+                    "ロックをアプリから削除し、ロックを初期化しました"
                 }
                 createToast(text)
             }
