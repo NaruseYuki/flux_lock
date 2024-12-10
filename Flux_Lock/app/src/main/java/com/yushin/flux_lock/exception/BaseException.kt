@@ -6,29 +6,32 @@ package com.yushin.flux_lock.exception
 
 sealed class BaseException(override val message: String, val errorCode: Int) : Exception(message) {
     // 接続エラー
-    class ConnectionException : BaseException(CONNECTION_EXCEPTION_TEXT, CONNECTION_ERROR_CODE)
+    data object ConnectionException : BaseException(CONNECTION_EXCEPTION_TEXT, CONNECTION_ERROR_CODE)
 
     // 登録失敗エラー
-    class RegistrationException : BaseException(REGISTRATION_EXCEPTION_TEXT, REGISTRATION_ERROR_CODE)
+    data object RegistrationException : BaseException(REGISTRATION_EXCEPTION_TEXT, REGISTRATION_ERROR_CODE)
 
     // スマートロック操作エラー
-    class SmartLockOperationException : BaseException(SMART_LOCK_OPERATION_EXCEPTION_TEXT, SMART_LOCK_OPERATION_ERROR_CODE)
+    data object SmartLockOperationException : BaseException(SMART_LOCK_OPERATION_EXCEPTION_TEXT, SMART_LOCK_OPERATION_ERROR_CODE)
 
     /**
      * これより下は今のところ使わないが、今後拡張する際に使用する
      */
 
     // タイムアウトエラー
-    class TimeoutException : BaseException(TIME_OUT_EXCEPTION_TEXT, TIME_OUT_ERROR_CODE)
+    data object TimeoutException : BaseException(TIME_OUT_EXCEPTION_TEXT, TIME_OUT_ERROR_CODE)
 
     // 認証エラー
-    class AuthenticationException : BaseException(AUTHENTICATION_EXCEPTION_TEXT, AUTHENTICATION_ERROR_CODE)
+    data object AuthenticationException : BaseException(AUTHENTICATION_EXCEPTION_TEXT, AUTHENTICATION_ERROR_CODE)
 
     // データ整合性エラー
-    class DataIntegrityException : BaseException(DATA_INTEGRITY_EXCEPTION_TEXT, DATA_INTEGRITY_ERROR_CODE)
+    data object DataIntegrityException : BaseException(DATA_INTEGRITY_EXCEPTION_TEXT, DATA_INTEGRITY_ERROR_CODE)
 
     // 未知のエラー
-    class UnknownException : BaseException(UNKNOWN_EXCEPTION_TEXT, UNKNOWN_ERROR_CODE)
+    data object UnknownException : BaseException(UNKNOWN_EXCEPTION_TEXT, UNKNOWN_ERROR_CODE)
+
+    // ネットワーク/BLE
+    data object NetworkBLEErrorException : BaseException(NETWORK_ERROR_EXCEPTION_TEXT, NETWORK_ERROR_ERROR_CODE)
 
     companion object{
         /**
@@ -41,6 +44,7 @@ sealed class BaseException(override val message: String, val errorCode: Int) : E
         const val AUTHENTICATION_EXCEPTION_TEXT = "認証エラー"
         const val DATA_INTEGRITY_EXCEPTION_TEXT = "データ整合性エラー"
         const val UNKNOWN_EXCEPTION_TEXT = "不明なエラー"
+        const val NETWORK_ERROR_EXCEPTION_TEXT = "ネットワークまたはBLEエラーが発生しました。インターネット/BLEに接続されているかを確認してください。 "
 
         /**
          * エラーコード
@@ -51,6 +55,7 @@ sealed class BaseException(override val message: String, val errorCode: Int) : E
         const val TIME_OUT_ERROR_CODE = 1004
         const val AUTHENTICATION_ERROR_CODE = 1005
         const val DATA_INTEGRITY_ERROR_CODE = 1006
+        const val NETWORK_ERROR_ERROR_CODE = 1007
         const val UNKNOWN_ERROR_CODE = 9999
 
     }

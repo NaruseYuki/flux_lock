@@ -1,11 +1,15 @@
 package com.yushin.flux_lock.view.ble
 
+import android.app.AlertDialog
+import android.content.DialogInterface
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import com.yushin.flux_lock.R
 import com.yushin.flux_lock.action_creator.BLEActionCreator
+import com.yushin.flux_lock.exception.BaseException
 import com.yushin.flux_lock.store.BLEStore
 import com.yushin.flux_lock.utils.SharedPreferencesHelper
 import com.yushin.flux_lock.utils.Utils.addTo

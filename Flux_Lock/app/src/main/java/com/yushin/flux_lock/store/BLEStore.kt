@@ -49,7 +49,7 @@ class BLEStore @Inject constructor(
     var bleStatusSubject = BehaviorRelay.create<CHDeviceStatus>()
 
     // ローディング中フラグ
-    val loadingSubject = PublishSubject.create<Boolean>()
+    private val loadingSubject = PublishSubject.create<Boolean>()
 
     private var disposables:CompositeDisposable = CompositeDisposable()
 
@@ -60,7 +60,7 @@ class BLEStore @Inject constructor(
             }.addTo(disposables)
     }
 
-    private fun <T>on(action: T) {
+    private fun on(action: BLEAction) {
         when (action) {
             is BLEAction.StartLoading -> startLoading()
             is BLEAction.FinishLoading -> finishLoading()
@@ -76,7 +76,7 @@ class BLEStore @Inject constructor(
             is BLEAction.DisconnectDevice -> disconnectDevice(action.device)
             is BLEAction.Reset -> reset(action.result)
             is BLEAction.DropKey -> dropKey(action.device)
-            is BaseException -> throwError(action)
+            is BLEAction.ThrowException -> throwError(action.exception)
         }
     }
 
@@ -111,18 +111,6 @@ class BLEStore @Inject constructor(
     private fun checkDeviceStatus(device: CHDevices) {
         connectedSubject.accept(device)
         Log.d("BLE", "@@@_$connectedSubject")
-    }
-
-    private fun unlockDevice() {
-        TODO("Not yet implemented")
-    }
-
-    private fun lockDevice() {
-        TODO("Not yet implemented")
-    }
-
-    private fun sendUserConfig() {
-        TODO("Not yet implemented")
     }
 
     private fun connectDevice(device: CHDevices) {
@@ -178,7 +166,6 @@ class BLEStore @Inject constructor(
         errorSubject.accept(error)
     }
 
-
     // 未登録デバイスのリストを取得する
     fun getUnregisteredDevices(): BehaviorRelay<MutableList<CHDevices>> = unRegisteredSubject
 
@@ -190,6 +177,8 @@ class BLEStore @Inject constructor(
 
     // 接続が完了したことを通知する
     fun getConnectionComplete() = connectionComplete
+
+    fun getError() = errorSubject
 
     // デバイスの初期化が完了した
     fun getDeviceInitResult() = Observable.zip(

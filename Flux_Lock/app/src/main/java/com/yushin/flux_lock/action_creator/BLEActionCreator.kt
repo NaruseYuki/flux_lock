@@ -13,10 +13,6 @@ import com.yushin.flux_lock.action.BLEAction
 import com.yushin.flux_lock.dispatcher.BLEDispatcher
 import com.yushin.flux_lock.exception.BaseException
 import com.yushin.flux_lock.utils.LockState
-import com.yushin.flux_lock.utils.Utils.addTo
-import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.disposables.Disposable
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -59,7 +55,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                 }else{
                     Log.d("BLE", "loadRegisteredDevices failed2: $it")
                     dispatcher.dispatch(BLEAction.ThrowException(
-                        BaseException.RegistrationException()))
+                        BaseException.RegistrationException))
                     currentDevice?.let { it1 -> resetLock(it1) }
                     attemptCnt = 0
                 }
@@ -134,7 +130,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                                     firstConnectDevice(device)
                                 }else{
                                     dispatcher.dispatch(BLEAction.ThrowException(
-                                        BaseException.ConnectionException()))
+                                        BaseException.ConnectionException))
                                     attemptCnt = 0
                                 }
                             }
@@ -234,7 +230,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
     }
 
     // デバイス名を登録するアクションを生成し、ディスパッチ
-    private fun registerDevice(device: CHDevices) {
+     fun registerDevice(device: CHDevices) {
         when(device){
             is CHSesame2 ->
                 registerSesame2(device)
@@ -268,7 +264,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                     resetLock(device)
                     dispatcher.dispatch(
                         BLEAction.ThrowException(
-                            BaseException.RegistrationException()
+                            BaseException.RegistrationException
                         )
                     )
                 }
@@ -303,7 +299,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                     resetLock(device)
                     dispatcher.dispatch(
                         BLEAction.ThrowException(
-                            BaseException.RegistrationException()
+                            BaseException.RegistrationException
                         )
                     )
                 }
@@ -363,7 +359,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                                     subscribeDeviceStatus(device)
                                 }else{
                                     dispatcher.dispatch(BLEAction.ThrowException(
-                                        BaseException.ConnectionException()))
+                                        BaseException.ConnectionException))
                                     attemptCnt = 0
                                 }
                             }
@@ -395,7 +391,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                         toggle(device)
                     }else{
                         dispatcher.dispatch(BLEAction.ThrowException(
-                            BaseException.SmartLockOperationException()))
+                            BaseException.SmartLockOperationException))
                         disconnect(device)
                         attemptCnt = 0
                     }
@@ -416,7 +412,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                         toggle(device)
                     }else{
                         dispatcher.dispatch(BLEAction.ThrowException(
-                            BaseException.SmartLockOperationException()))
+                            BaseException.SmartLockOperationException))
                         disconnect(device)
                         attemptCnt = 0
                     }
@@ -475,8 +471,14 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
                 }
             else -> return
         }
-
     }
+
+    /**
+     * NWまたはBLEの例外エラーを投げる
+     */
+     fun handleNetworkAndBluetoothState(){
+         dispatcher.dispatch(BLEAction.ThrowException(BaseException.NetworkBLEErrorException))
+     }
 
     companion object {
         const val CONNECT_MAX = 10 // 接続試行回数 max

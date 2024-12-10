@@ -22,15 +22,25 @@ class RegisterCompletedFragment : BaseFragment() {
         return binding.root
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        binding.completeTextTrans.setOnClickListener {
+            bleActionCreator.loadRegisteredDevices()
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         binding.progressBar.visibility = View.VISIBLE
         binding.completeText.visibility = View.GONE
+        binding.completeTextTrans.visibility = View.GONE
         bleStore.getRegisterCompleteSubject()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe {
                 binding.completeText.visibility = View.VISIBLE
                 binding.progressBar.visibility = View.GONE
+                binding.completeTextTrans.visibility = View.VISIBLE
             }
             .addTo(disposable)
     }

@@ -23,7 +23,7 @@
         android:id="@+id/complete_text_trans"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="変わらない場合はここをタップ"
+        android:text="@string/register_device_completed_trans"
         android:textSize="24sp"
         app:layout_constraintTop_toBottomOf="@id/complete_text"
         app:layout_constraintBottom_toBottomOf="parent"

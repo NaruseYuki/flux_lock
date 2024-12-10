@@ -2,13 +2,16 @@ package com.yushin.flux_lock.view
 
 import android.Manifest
 import android.app.AlertDialog
+import android.bluetooth.BluetoothManager
+import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
@@ -16,6 +19,8 @@ import androidx.fragment.app.FragmentManager
 import com.yushin.flux_lock.R
 import com.yushin.flux_lock.action_creator.BLEActionCreator
 import com.yushin.flux_lock.databinding.ActivityMainBinding
+import com.yushin.flux_lock.exception.BaseException
+import com.yushin.flux_lock.service.ConnectionMonitorServiceRx
 import com.yushin.flux_lock.store.BLEStore
 import com.yushin.flux_lock.utils.Utils.addTo
 import com.yushin.flux_lock.view.ble.ControlDeviceFragment
@@ -43,22 +48,31 @@ class BLEActivity : AppCompatActivity() {
         Manifest.permission.BLUETOOTH_CONNECT,
         Manifest.permission.ACCESS_FINE_LOCATION
     )
-
     private var requestFlg = false
-    private var disposable = CompositeDisposable()
+    private var disposables = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // サービスを開始
+        val serviceIntent = Intent(this, ConnectionMonitorServiceRx::class.java)
+        startService(serviceIntent)
+
     }
 
 
     override fun onResume() {
         super.onResume()
-        if(disposable.isDisposed){
-            disposable = CompositeDisposable()
+        if(disposables.isDisposed){
+            disposables = CompositeDisposable()
         }
+        if(!isNetworkConnected(this)|| !isBluetoothEnabled(this)){
+            showAppEndDialog(getString(R.string.end_app_text))
+        }
+        subscribeNetworkBLUEStatus()
+
         // DB読み込みが完了したらフラグメントを表示するよう購読
         displayElements()
         if(!requestFlg){
@@ -68,19 +82,21 @@ class BLEActivity : AppCompatActivity() {
         bleActionCreator.loadRegisteredDevices()
 
     }
-
     override fun onPause() {
         super.onPause()
         // スキャン不可にする
         bleActionCreator.stopScanDevices()
-        disposable.clear()
+        disposables.clear()
     }
 
     override fun onDestroy() {
         bleStore.getConnectedDevice().value?.let { bleActionCreator.disconnect(it) }
         // disposableを破棄
+        // サービスを停止
+        val serviceIntent = Intent(this, ConnectionMonitorServiceRx::class.java)
+        stopService(serviceIntent)
         bleStore.onDestroy()
-        disposable.dispose()
+        disposables.dispose()
         super.onDestroy()
     }
 
@@ -135,7 +151,7 @@ class BLEActivity : AppCompatActivity() {
         }
         alertDialogBuilder.setNegativeButton(getString(R.string.cancel)) { dialogInterface: DialogInterface, _: Int ->
             dialogInterface.dismiss()
-            // 一旦アプリを終了する
+            // アプリを終了する
             finish()
         }
         val alertDialog = alertDialogBuilder.create()
@@ -170,7 +186,7 @@ class BLEActivity : AppCompatActivity() {
                         navigateFragment(R.id.container_main_fragment,NoDevicesFragment())
                     }
                 }
-                .addTo(disposable)
+                .addTo(disposables)
     }
 
      fun navigateFragment(fragmentId:Int,fragment: Fragment) {
@@ -183,6 +199,42 @@ class BLEActivity : AppCompatActivity() {
 
     private fun Fragment.getBackStackTag(): String {
         return this.javaClass.simpleName
+    }
+
+    private fun showAppEndDialog(message:String) {
+        val alertDialogBuilder = AlertDialog.Builder(this)
+        alertDialogBuilder.setTitle(getString(R.string.caution_dialog_text))
+        alertDialogBuilder.setMessage(message)
+        alertDialogBuilder.setPositiveButton("OK"){ _: DialogInterface, _: Int ->
+            finish()
+        }
+        val alertDialog = alertDialogBuilder.create()
+        alertDialog.show()
+    }
+
+    private fun subscribeNetworkBLUEStatus(){
+        bleStore.getError()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                when(it) {
+                    is BaseException.NetworkBLEErrorException ->
+                        showAppEndDialog(getString(R.string.end_app_text))
+                    else -> {}
+                }
+            }
+    }
+
+    private fun isNetworkConnected(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork
+        val capabilities = connectivityManager.getNetworkCapabilities(network)
+        return capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+
+    private fun isBluetoothEnabled(context: Context): Boolean {
+        val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        val bluetoothAdapter =  bluetoothManager.adapter
+        return bluetoothAdapter?.isEnabled == true
     }
 
     companion object{

@@ -37,11 +37,21 @@
     <string name="input_device_setting_ok">設定を完了する</string>
     <string name="input_device_setting_complete">設定を完了しました</string>
     <string name="input_device_setting_back">戻る</string>
+
+    <!--登録完了画面-->
     <string name="register_device_completed">登録完了\nしばらくすると画面が切り替わります</string>
+    <string name="register_device_completed_trans">変わらない場合はここをタップ</string>
+
     <string name="connect_index">connect_index</string>
     <string name="reconnect_text">再接続</string>
     <string name="connect_completed_text">に接続しました</string>
     <string name="delete_confirm_title">確認</string>
     <string name="delete_confirm_text">本当にこのロックを削除しますか?</string>
     <string name="delete_confirm_ok">削除する</string>
+    <string name="caution_dialog_text">警告</string>
+    <string name="end_app_text">ネットワーク/Bluetoothが切断されました。\nアプリを終了します</string>
+
+
+
+
 </resources>
