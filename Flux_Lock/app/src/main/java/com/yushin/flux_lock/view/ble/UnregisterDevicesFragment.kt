@@ -21,12 +21,6 @@ class UnregisterDevicesFragment : BaseFragment() {
     private var recyclerView: RecyclerView? = null
     private lateinit var bleAdapter: BLEAdapter
     private lateinit var binding: FragmentUnregisteredDevicesBinding
-    private lateinit var sharedPreferencesHelper: SharedPreferencesHelper
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        sharedPreferencesHelper = SharedPreferencesHelper(requireContext())
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -61,7 +55,6 @@ class UnregisterDevicesFragment : BaseFragment() {
         // 初期データをロードする
         bleActionCreator.loadUnregisteredDevices()
     }
-
 
     private fun onDeviceClicked(device: CHDevices) {
         Log.d("UnregisterDevicesFragment", "onDeviceClicked: $device")

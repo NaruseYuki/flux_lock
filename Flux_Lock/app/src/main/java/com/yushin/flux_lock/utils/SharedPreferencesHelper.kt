@@ -29,4 +29,8 @@ class SharedPreferencesHelper(context: Context) {
             context.getString(R.string.connect_index), 0)
     }
 
+    fun removeDevice(deviceId: UUID) {
+        sharedPreferences.edit().remove(deviceId.toString()).apply()
+    }
+
 }
