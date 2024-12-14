@@ -3,6 +3,7 @@ package com.yushin.flux_lock.store
 import android.bluetooth.BluetoothDevice
 import android.util.Log
 import co.candyhouse.sesame.open.CHResult
+import co.candyhouse.sesame.open.CHResultState
 import co.candyhouse.sesame.open.device.CHDeviceStatus
 import co.candyhouse.sesame.open.device.CHDeviceStatusDelegate
 import co.candyhouse.sesame.open.device.CHDevices
@@ -43,13 +44,17 @@ class BLEStore @Inject constructor(
     private var deviceInitResetResult = PublishRelay.create<Boolean>()
     private var deviceInitDropKeyResult = PublishRelay.create<Unit>()
 
+    // エラー通知
     private val errorSubject = PublishRelay.create<BaseException>()
 
     // デバイスステータス
-    var bleStatusSubject = BehaviorRelay.create<CHDeviceStatus>()
+    private var bleStatusSubject = BehaviorRelay.create<CHDeviceStatus>()
 
     // ローディング中フラグ
     private val loadingSubject = PublishSubject.create<Boolean>()
+
+    // バージョンタグ
+    private val versionTagSubject = BehaviorRelay.create<CHResultState<String>>()
 
     private var disposables:CompositeDisposable = CompositeDisposable()
 
@@ -76,6 +81,7 @@ class BLEStore @Inject constructor(
             is BLEAction.DisconnectDevice -> disconnectDevice(action.device)
             is BLEAction.Reset -> reset(action.result)
             is BLEAction.DropKey -> dropKey(action.device)
+            is BLEAction.GetVersionTag -> getVersionTag(action.status)
             is BLEAction.ThrowException -> throwError(action.exception)
         }
     }
@@ -161,6 +167,10 @@ class BLEStore @Inject constructor(
         deviceInitDropKeyResult.accept(Unit)
     }
 
+    private fun getVersionTag(status: CHResultState<String>) {
+        versionTagSubject.accept(status)
+    }
+
     private fun throwError(error:BaseException){
         Log.d("BLE", "throwError: ${error.message}")
         errorSubject.accept(error)
@@ -189,6 +199,10 @@ class BLEStore @Inject constructor(
     }
 
     fun getRegisterCompleteSubject() = registerCompleteSubject
+
+    fun getBleStatus() = bleStatusSubject
+
+    fun getVersionTag() = versionTagSubject
 }
 
 // ダミーデバイスのクラス定義

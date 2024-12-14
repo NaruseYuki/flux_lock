@@ -1,5 +1,6 @@
 package com.yushin.flux_lock.action
 
+import co.candyhouse.sesame.open.CHResultState
 import co.candyhouse.sesame.open.device.CHDeviceStatus
 import co.candyhouse.sesame.open.device.CHDevices
 import com.yushin.flux_lock.exception.BaseException
@@ -47,6 +48,8 @@ sealed class BLEAction {
     data class Reset(val result: Boolean) : BLEAction()
 
     data class DropKey(val device: CHDevices) : BLEAction()
+
+    data class GetVersionTag(val status: CHResultState<String>) : BLEAction()
 
     data class ThrowException(val exception: BaseException) : BLEAction()
 

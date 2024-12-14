@@ -36,6 +36,18 @@ class ControlDeviceFragment : BaseFragment() {
         addDevicesListener()
         editDeviceSetting()
         setAdapterListener()
+        subscribeTagVersion()
+    }
+
+    // FWバージョン取得を購読する
+    private fun subscribeTagVersion() {
+        bleStore.getVersionTag()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                // 最新FWがあるなら案内表示する
+                //
+            }
+            .addTo(disposable)
     }
 
     override fun onResume() {
@@ -45,11 +57,17 @@ class ControlDeviceFragment : BaseFragment() {
         setLockImageListener()
     }
 
+    private fun checkFirmwareVersion() {
+        bleStore.getConnectedDevice().value?.let { device ->
+            bleActionCreator.getVersionTag(device)
+        }
+    }
+
     /**
      * デバイスの状態を監視し、画像を更新する
      */
     private fun subscribeDeviceStatus() {
-       bleStore.bleStatusSubject
+       bleStore.getBleStatus()
            .observeOn(AndroidSchedulers.mainThread())
            .subscribe { status ->
                Log.d("BLE","@@@"+ status.toString())
@@ -109,6 +127,8 @@ class ControlDeviceFragment : BaseFragment() {
                 binding.lockImage.setOnClickListener {
                     bleActionCreator.toggle(device)
                 }
+                // ファームウェアバージョン確認
+                checkFirmwareVersion()
             }.addTo(disposable)
     }
 

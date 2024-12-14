@@ -473,6 +473,20 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
         }
     }
 
+     fun getVersionTag(device: CHDevices){
+        device.getVersionTag {
+            it.onSuccess {
+                tag ->
+                Log.d("BLE", "getVersionTag: $tag")
+                dispatcher.dispatch(BLEAction.GetVersionTag(tag))
+            }
+            it.onFailure {
+                tag ->
+                Log.d("BLE", "getVersionTag failed: $tag")
+                // 失敗しても何もしない
+            }
+        }
+    }
     /**
      * NWまたはBLEの例外エラーを投げる
      */
