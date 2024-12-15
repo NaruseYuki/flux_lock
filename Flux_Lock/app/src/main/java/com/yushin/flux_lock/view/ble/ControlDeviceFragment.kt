@@ -16,6 +16,7 @@ import com.bumptech.glide.Glide
 import com.yushin.flux_lock.R
 import com.yushin.flux_lock.databinding.FragmentControlDeviceBinding
 import com.yushin.flux_lock.utils.Utils.addTo
+import com.yushin.flux_lock.utils.Utils.getFirZip
 import com.yushin.flux_lock.view.BLEActivity
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 
@@ -44,8 +45,19 @@ class ControlDeviceFragment : BaseFragment() {
         bleStore.getVersionTag()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe {
+                currentVersion ->
                 // 最新FWがあるなら案内表示する
-                //
+                val zipName = bleStore.getConnectedDevice().value?.getFirZip()
+                    ?.let { it1 -> resources.getResourceEntryName(it1) }
+                val tailTag = currentVersion.data.split("-").last()
+                val isLatest = (zipName?.contains(tailTag))
+                if (isLatest == false){
+                    binding.infoUpdate.visibility = View.VISIBLE
+                    binding.versionUpRecommend.visibility = View.VISIBLE
+                } else {
+                    binding.infoUpdate.visibility = View.GONE
+                    binding.versionUpRecommend.visibility = View.GONE
+                }
             }
             .addTo(disposable)
     }

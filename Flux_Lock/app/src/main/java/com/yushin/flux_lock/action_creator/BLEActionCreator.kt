@@ -487,6 +487,7 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
             }
         }
     }
+
     /**
      * NWまたはBLEの例外エラーを投げる
      */

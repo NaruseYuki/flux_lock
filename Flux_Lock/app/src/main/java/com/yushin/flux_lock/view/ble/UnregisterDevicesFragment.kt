@@ -46,7 +46,6 @@ class UnregisterDevicesFragment : BaseFragment() {
         super.onResume()
         // BLEStoreを監視し、変更があったらUIを更新する
         bleStore.getUnregisteredDevices()
-            .skip(1)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe{ devices ->
                 bleAdapter.updateDevices(devices)
