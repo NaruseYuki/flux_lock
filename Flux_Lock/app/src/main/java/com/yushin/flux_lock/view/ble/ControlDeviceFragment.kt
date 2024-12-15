@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.core.content.ContextCompat.getColor
+import co.candyhouse.sesame.open.CHResultState
 import co.candyhouse.sesame.open.device.CHDeviceStatus
 import com.bumptech.glide.Glide
 import com.yushin.flux_lock.R
@@ -105,19 +106,60 @@ class ControlDeviceFragment : BaseFragment() {
             .subscribe {
                     currentVersion ->
                 // 最新FWがあるなら案内表示する
-                val zipName = bleStore.getConnectedDevice().value?.getFirZip()
-                    ?.let { it1 -> resources.getResourceEntryName(it1) }
-                val tailTag = currentVersion.data.split("-").last()
-                val isLatest = (zipName?.contains(tailTag)) ?: return@subscribe
-                if (!isLatest){
-                    binding.infoUpdate.visibility = View.VISIBLE
-                    binding.versionUpRecommend.visibility = View.VISIBLE
-                } else {
-                    binding.infoUpdate.visibility = View.GONE
-                    binding.versionUpRecommend.visibility = View.GONE
-                }
+                displayUpdateGuideUI(currentVersion)
             }
             .addTo(disposable)
+    }
+
+    /**
+     *  最新バージョンかチェックし、
+     *  最新でないならアップデートの案内表示
+     */
+    private fun displayUpdateGuideUI(currentVersion: CHResultState<String>) {
+        val zipName = bleStore.getConnectedDevice().value?.getFirZip()
+            ?.let { it1 -> resources.getResourceEntryName(it1) }
+        val tailTag = currentVersion.data.split("-").last()
+        val isLatest = (zipName?.contains(tailTag)) ?: return
+        if (!isLatest) {
+            setFirmWareUpdateListener()
+        } else {
+            // 最新の場合はUIも消しておく
+            binding.noticeUpdate.setOnClickListener(null)
+            binding.noticeUpdate.visibility = View.GONE
+        }
+    }
+
+    /**
+     *  最新バージョン確認の処理を追加する
+     */
+    private fun setFirmWareUpdateListener() {
+        binding.noticeUpdate.visibility = View.VISIBLE
+        binding.noticeUpdate.setOnClickListener {
+            showUpdateConfirmDialog(
+                getString(R.string.delete_confirm_title),
+                getString(R.string.update_confirm_text),
+                getString(R.string.update_confirm_text_ok)
+            )
+        }
+    }
+
+    /**
+     *  アップデートダイアログの表示
+     *  YESなら更新開始のUI
+     *  NOならダイアログを閉じる
+     */
+    private fun showUpdateConfirmDialog(title:String,message: String,button: String) {
+        val alertDialogBuilder = AlertDialog.Builder(requireContext())
+        alertDialogBuilder.setTitle(title)
+        alertDialogBuilder.setMessage(message)
+        alertDialogBuilder.setPositiveButton(button) { _: DialogInterface, _: Int ->
+            // TODO ファームウェア更新処理
+        }
+        alertDialogBuilder.setNegativeButton(getString(R.string.cancel)) { dialogInterface: DialogInterface, _: Int ->
+            dialogInterface.dismiss()
+        }
+        val alertDialog = alertDialogBuilder.create()
+        alertDialog.show()
     }
 
     private fun setLockImageListener() {
@@ -209,7 +251,8 @@ class ControlDeviceFragment : BaseFragment() {
         }
 
         binding.deleteDevices.setOnClickListener {
-            showDeleteDialog(getString(R.string.delete_confirm_title),
+            showDeleteDialog(
+                getString(R.string.delete_confirm_title),
                 getString(R.string.delete_confirm_text),
                 getString(R.string.delete_confirm_ok)
             )

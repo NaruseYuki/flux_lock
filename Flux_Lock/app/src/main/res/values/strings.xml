@@ -51,6 +51,9 @@
     <string name="delete_confirm_ok">削除する</string>
     <string name="caution_dialog_text">警告</string>
     <string name="end_app_text">ネットワーク/Bluetoothが切断されました。\nアプリを終了します</string>
+    <string name="update_confirm_text">このロックのバージョンを更新しますか?</string>
+    <string name="update_confirm_text_ok">更新する</string>
+
 
 
 

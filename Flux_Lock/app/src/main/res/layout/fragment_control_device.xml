@@ -40,32 +40,34 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/spinner" />
 
-    <ImageView
-        android:id="@+id/info_update"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/notice_update"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:src="@drawable/baseline_info_24"
         android:visibility="gone"
-        app:layout_constraintEnd_toStartOf="@id/version_up_recommend"
+        app:layout_constraintEnd_toEndOf="@id/lock_image"
         app:layout_constraintStart_toStartOf="@+id/lock_image"
         app:layout_constraintTop_toBottomOf="@+id/lock_image"
-        tools:visibility="visible" />
+        tools:visibility="visible">
+        <ImageView
+            android:id="@+id/info_update"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/baseline_info_24"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+        <TextView
+            android:id="@+id/version_up_recommend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/version_up_recommend"
+            android:textColor="@android:color/holo_red_dark"
+            android:textSize="16sp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/info_update"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-    <TextView
-        android:id="@+id/version_up_recommend"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="@string/version_up_recommend"
-        android:textColor="@android:color/holo_red_dark"
-        android:textSize="16sp"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="@+id/lock_image"
-        app:layout_constraintStart_toEndOf="@+id/info_update"
-        app:layout_constraintTop_toBottomOf="@id/lock_image"
-        tools:visibility="visible" />
-
+    </androidx.constraintlayout.widget.ConstraintLayout>
     <Button
         android:id="@+id/connect_button"
         android:layout_width="0dp"
