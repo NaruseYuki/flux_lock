@@ -13,6 +13,7 @@ import android.widget.ArrayAdapter
 import androidx.core.content.ContextCompat.getColor
 import co.candyhouse.sesame.open.CHResultState
 import co.candyhouse.sesame.open.device.CHDeviceStatus
+import co.candyhouse.sesame.open.device.CHDevices
 import com.bumptech.glide.Glide
 import com.yushin.flux_lock.R
 import com.yushin.flux_lock.databinding.FragmentControlDeviceBinding
@@ -36,10 +37,10 @@ class ControlDeviceFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        subscribeTagVersion()
         addDevicesListener()
         editDeviceSetting()
         setAdapterListener()
-        subscribeTagVersion()
     }
 
     override fun onResume() {
@@ -49,10 +50,8 @@ class ControlDeviceFragment : BaseFragment() {
         setLockImageListener()
     }
 
-    private fun checkFirmwareVersion() {
-        bleStore.getConnectedDevice().value?.let { device ->
-            bleActionCreator.getVersionTag(device)
-        }
+    private fun checkFirmwareVersion(device:CHDevices) {
+        bleActionCreator.getVersionTag(device)
     }
 
     /**
@@ -176,18 +175,18 @@ class ControlDeviceFragment : BaseFragment() {
          }
 
         bleStore.getConnectedDevice()
-            .skip(1)
-            .observeOn(AndroidSchedulers.mainThread())
             .filter {
                 it != null && it !is DummyDevice
             }
+            .distinctUntilChanged()
+            .observeOn(AndroidSchedulers.mainThread())
             .subscribe { device ->
                 // 向き先変更
                 binding.lockImage.setOnClickListener {
                     bleActionCreator.toggle(device)
                 }
                 // ファームウェアバージョン確認
-                checkFirmwareVersion()
+                checkFirmwareVersion(device)
             }.addTo(disposable)
     }
 
