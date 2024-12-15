@@ -16,6 +16,7 @@ import co.candyhouse.sesame.open.device.CHDeviceStatus
 import com.bumptech.glide.Glide
 import com.yushin.flux_lock.R
 import com.yushin.flux_lock.databinding.FragmentControlDeviceBinding
+import com.yushin.flux_lock.store.DummyDevice
 import com.yushin.flux_lock.utils.Utils.addTo
 import com.yushin.flux_lock.utils.Utils.getFirZip
 import com.yushin.flux_lock.view.BLEActivity
@@ -153,7 +154,9 @@ class ControlDeviceFragment : BaseFragment() {
         alertDialogBuilder.setTitle(title)
         alertDialogBuilder.setMessage(message)
         alertDialogBuilder.setPositiveButton(button) { _: DialogInterface, _: Int ->
-            // TODO ファームウェア更新処理
+            bleStore.getConnectedDevice().value?.let {
+                bleActionCreator.updateFirmware(it)
+            }
         }
         alertDialogBuilder.setNegativeButton(getString(R.string.cancel)) { dialogInterface: DialogInterface, _: Int ->
             dialogInterface.dismiss()
@@ -176,7 +179,7 @@ class ControlDeviceFragment : BaseFragment() {
             .skip(1)
             .observeOn(AndroidSchedulers.mainThread())
             .filter {
-                it != null
+                it != null && it !is DummyDevice
             }
             .subscribe { device ->
                 // 向き先変更

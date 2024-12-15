@@ -56,6 +56,9 @@ class BLEStore @Inject constructor(
     // バージョンタグ
     private val versionTagSubject = BehaviorRelay.create<CHResultState<String>>()
 
+    //バージョンアップ完了
+    private val versionUpComplete = PublishRelay.create<Unit>()
+
     private var disposables:CompositeDisposable = CompositeDisposable()
 
     init {
@@ -83,12 +86,14 @@ class BLEStore @Inject constructor(
             is BLEAction.DropKey -> dropKey(action.device)
             is BLEAction.GetVersionTag -> getVersionTag(action.status)
             is BLEAction.ThrowException -> throwError(action.exception)
+            is BLEAction.FirmwareVersionUpComplete -> firmwareVersionUpComplete()
         }
     }
 
     private fun disconnectDevice(device: CHDevices) {
         // nullを入れると例外エラーが投げられるので、切断時はdummyを入れておく
         val dummy:CHDevices = DummyDevice()
+        connectedSubject.accept(dummy)
         Log.d("BLE", "disconnect: $device")
     }
 
@@ -171,6 +176,10 @@ class BLEStore @Inject constructor(
         versionTagSubject.accept(status)
     }
 
+    private fun firmwareVersionUpComplete(){
+        versionUpComplete.accept(Unit)
+    }
+
     private fun throwError(error:BaseException){
         Log.d("BLE", "throwError: ${error.message}")
         errorSubject.accept(error)
@@ -203,6 +212,8 @@ class BLEStore @Inject constructor(
     fun getBleStatus() = bleStatusSubject
 
     fun getVersionTag() = versionTagSubject
+
+    fun getVersionUpComplete() = versionUpComplete
 }
 
 // ダミーデバイスのクラス定義

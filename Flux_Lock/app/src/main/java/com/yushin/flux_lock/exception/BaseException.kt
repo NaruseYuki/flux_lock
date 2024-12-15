@@ -14,6 +14,8 @@ sealed class BaseException(override val message: String, val errorCode: Int) : E
     // スマートロック操作エラー
     data object SmartLockOperationException : BaseException(SMART_LOCK_OPERATION_EXCEPTION_TEXT, SMART_LOCK_OPERATION_ERROR_CODE)
 
+    data object FirmwareVersionUpException : BaseException(FIRMWARE_VERSION_UP_EXCEPTION_TEXT, FIRMWARE_VERSION_UP_ERROR_CODE)
+
     /**
      * これより下は今のところ使わないが、今後拡張する際に使用する
      */
@@ -44,7 +46,8 @@ sealed class BaseException(override val message: String, val errorCode: Int) : E
         const val AUTHENTICATION_EXCEPTION_TEXT = "認証エラー"
         const val DATA_INTEGRITY_EXCEPTION_TEXT = "データ整合性エラー"
         const val UNKNOWN_EXCEPTION_TEXT = "不明なエラー"
-        const val NETWORK_ERROR_EXCEPTION_TEXT = "ネットワークまたはBLEエラーが発生しました。インターネット/BLEに接続されているかを確認してください。 "
+        const val NETWORK_ERROR_EXCEPTION_TEXT = "ネットワークまたはBLEエラーが発生しました。インターネット/BLEに接続されているかを確認してください。"
+        const val FIRMWARE_VERSION_UP_EXCEPTION_TEXT = "バージョンアップエラー"
 
         /**
          * エラーコード
@@ -56,6 +59,7 @@ sealed class BaseException(override val message: String, val errorCode: Int) : E
         const val AUTHENTICATION_ERROR_CODE = 1005
         const val DATA_INTEGRITY_ERROR_CODE = 1006
         const val NETWORK_ERROR_ERROR_CODE = 1007
+        const val FIRMWARE_VERSION_UP_ERROR_CODE = 1008
         const val UNKNOWN_ERROR_CODE = 9999
 
     }

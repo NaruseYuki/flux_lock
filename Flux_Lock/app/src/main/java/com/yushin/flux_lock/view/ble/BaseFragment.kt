@@ -1,7 +1,11 @@
 package com.yushin.flux_lock.view.ble
 
 import android.app.AlertDialog
+import android.bluetooth.BluetoothManager
+import android.content.Context
 import android.content.DialogInterface
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.View
@@ -42,6 +46,11 @@ open class BaseFragment : Fragment() {
         if(disposable.isDisposed){
             disposable = CompositeDisposable()
         }
+        val context = requireContext()
+        if(!isNetworkConnected(context)|| !isBluetoothEnabled(context)){
+            showAppEndDialog(getString(R.string.end_app_text))
+        }
+        subscribeNetworkBLEStatus()
         subscribeConnectedDevice()
         subscribeDeviceInitResult()
     }
@@ -107,4 +116,42 @@ open class BaseFragment : Fragment() {
 
     protected fun createToast(message:String)
         = Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+
+    private fun subscribeNetworkBLEStatus(){
+        bleStore.getError()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                when(it) {
+                    is BaseException.NetworkBLEErrorException ->
+                        showAppEndDialog(getString(R.string.end_app_text))
+                    is BaseException.FirmwareVersionUpException ->
+                        showAppEndDialog(getString(R.string.end_app_text))
+                    else -> {}
+                }
+            }
+    }
+
+    private fun showAppEndDialog(message:String) {
+        val alertDialogBuilder = AlertDialog.Builder(requireContext())
+        alertDialogBuilder.setTitle(getString(R.string.caution_dialog_text))
+        alertDialogBuilder.setMessage(message)
+        alertDialogBuilder.setPositiveButton("OK"){ _: DialogInterface, _: Int ->
+            activity?.finish()
+        }
+        val alertDialog = alertDialogBuilder.create()
+        alertDialog.show()
+    }
+
+    private fun isNetworkConnected(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork
+        val capabilities = connectivityManager.getNetworkCapabilities(network)
+        return capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+
+    private fun isBluetoothEnabled(context: Context): Boolean {
+        val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        val bluetoothAdapter =  bluetoothManager.adapter
+        return bluetoothAdapter?.isEnabled == true
+    }
 }

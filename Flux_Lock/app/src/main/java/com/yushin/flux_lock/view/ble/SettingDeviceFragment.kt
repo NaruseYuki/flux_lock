@@ -18,6 +18,7 @@ import com.yushin.flux_lock.adapter.BLEAdapter
 import com.yushin.flux_lock.adapter.MultiLayoutRecyclerAdapter
 import com.yushin.flux_lock.databinding.FragmentSettingDeviceBinding
 import com.yushin.flux_lock.model.ViewTypeCell
+import com.yushin.flux_lock.store.DummyDevice
 import com.yushin.flux_lock.utils.SharedPreferencesHelper
 import com.yushin.flux_lock.utils.Utils.addTo
 import com.yushin.flux_lock.viewholder.EditTextViewHolder
@@ -92,6 +93,9 @@ class SettingDeviceFragment(private val chDevices: CHDevices) : BaseFragment() {
     override fun onResume() {
         super.onResume()
         bleStore.getConnectedDevice()
+            .filter {
+              it !is DummyDevice
+            }
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { device ->
                 multiAdapter.updateItems(device)

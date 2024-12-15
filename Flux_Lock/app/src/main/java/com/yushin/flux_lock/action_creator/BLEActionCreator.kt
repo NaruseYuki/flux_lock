@@ -473,6 +473,17 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
         }
     }
 
+    fun updateFirmware(device: CHDevices){
+        device.updateFirmware {
+           it.onSuccess {
+                dispatcher.dispatch(BLEAction.FirmwareVersionUpComplete)
+           }
+           it.onFailure {
+               dispatcher.dispatch(BLEAction.ThrowException(BaseException.FirmwareVersionUpException))
+           }
+        }
+    }
+
      fun getVersionTag(device: CHDevices){
         device.getVersionTag {
             it.onSuccess {

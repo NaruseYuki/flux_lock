@@ -68,10 +68,6 @@ class BLEActivity : AppCompatActivity() {
         if(disposables.isDisposed){
             disposables = CompositeDisposable()
         }
-        if(!isNetworkConnected(this)|| !isBluetoothEnabled(this)){
-            showAppEndDialog(getString(R.string.end_app_text))
-        }
-        subscribeNetworkBLUEStatus()
 
         // DB読み込みが完了したらフラグメントを表示するよう購読
         displayElements()
@@ -199,42 +195,6 @@ class BLEActivity : AppCompatActivity() {
 
     private fun Fragment.getBackStackTag(): String {
         return this.javaClass.simpleName
-    }
-
-    private fun showAppEndDialog(message:String) {
-        val alertDialogBuilder = AlertDialog.Builder(this)
-        alertDialogBuilder.setTitle(getString(R.string.caution_dialog_text))
-        alertDialogBuilder.setMessage(message)
-        alertDialogBuilder.setPositiveButton("OK"){ _: DialogInterface, _: Int ->
-            finish()
-        }
-        val alertDialog = alertDialogBuilder.create()
-        alertDialog.show()
-    }
-
-    private fun subscribeNetworkBLUEStatus(){
-        bleStore.getError()
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                when(it) {
-                    is BaseException.NetworkBLEErrorException ->
-                        showAppEndDialog(getString(R.string.end_app_text))
-                    else -> {}
-                }
-            }
-    }
-
-    private fun isNetworkConnected(context: Context): Boolean {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = connectivityManager.activeNetwork
-        val capabilities = connectivityManager.getNetworkCapabilities(network)
-        return capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-    }
-
-    private fun isBluetoothEnabled(context: Context): Boolean {
-        val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        val bluetoothAdapter =  bluetoothManager.adapter
-        return bluetoothAdapter?.isEnabled == true
     }
 
     companion object{

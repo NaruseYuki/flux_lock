@@ -51,6 +51,8 @@ sealed class BLEAction {
 
     data class GetVersionTag(val status: CHResultState<String>) : BLEAction()
 
+    data object FirmwareVersionUpComplete : BLEAction()
+
     data class ThrowException(val exception: BaseException) : BLEAction()
 
 
