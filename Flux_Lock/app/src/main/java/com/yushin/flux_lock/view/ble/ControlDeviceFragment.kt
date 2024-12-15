@@ -40,28 +40,6 @@ class ControlDeviceFragment : BaseFragment() {
         subscribeTagVersion()
     }
 
-    // FWバージョン取得を購読する
-    private fun subscribeTagVersion() {
-        bleStore.getVersionTag()
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                currentVersion ->
-                // 最新FWがあるなら案内表示する
-                val zipName = bleStore.getConnectedDevice().value?.getFirZip()
-                    ?.let { it1 -> resources.getResourceEntryName(it1) }
-                val tailTag = currentVersion.data.split("-").last()
-                val isLatest = (zipName?.contains(tailTag))
-                if (isLatest == false){
-                    binding.infoUpdate.visibility = View.VISIBLE
-                    binding.versionUpRecommend.visibility = View.VISIBLE
-                } else {
-                    binding.infoUpdate.visibility = View.GONE
-                    binding.versionUpRecommend.visibility = View.GONE
-                }
-            }
-            .addTo(disposable)
-    }
-
     override fun onResume() {
         super.onResume()
         subscribeDeviceStatus()
@@ -116,6 +94,30 @@ class ControlDeviceFragment : BaseFragment() {
                }
            }
            .addTo(disposable)
+    }
+
+    /**
+     * FWバージョン取得を購読する
+     */
+    private fun subscribeTagVersion() {
+        bleStore.getVersionTag()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                    currentVersion ->
+                // 最新FWがあるなら案内表示する
+                val zipName = bleStore.getConnectedDevice().value?.getFirZip()
+                    ?.let { it1 -> resources.getResourceEntryName(it1) }
+                val tailTag = currentVersion.data.split("-").last()
+                val isLatest = (zipName?.contains(tailTag)) ?: return@subscribe
+                if (!isLatest){
+                    binding.infoUpdate.visibility = View.VISIBLE
+                    binding.versionUpRecommend.visibility = View.VISIBLE
+                } else {
+                    binding.infoUpdate.visibility = View.GONE
+                    binding.versionUpRecommend.visibility = View.GONE
+                }
+            }
+            .addTo(disposable)
     }
 
     private fun setLockImageListener() {
