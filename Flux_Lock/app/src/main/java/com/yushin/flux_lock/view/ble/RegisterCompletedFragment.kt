@@ -35,7 +35,7 @@ class RegisterCompletedFragment : BaseFragment() {
         binding.progressBar.visibility = View.VISIBLE
         binding.completeText.visibility = View.GONE
         binding.completeTextTrans.visibility = View.GONE
-        bleStore.getRegisterCompleteSubject()
+        bleStore.getRegisterCompleteRelay()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe {
                 binding.completeText.visibility = View.VISIBLE

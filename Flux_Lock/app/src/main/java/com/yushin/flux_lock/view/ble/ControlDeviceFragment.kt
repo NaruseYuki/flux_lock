@@ -37,7 +37,7 @@ class ControlDeviceFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        subscribeTagVersion()
+        // subscribeTagVersion()
         addDevicesListener()
         editDeviceSetting()
         setAdapterListener()
@@ -97,83 +97,77 @@ class ControlDeviceFragment : BaseFragment() {
            .addTo(disposable)
     }
 
-    /**
-     * FWバージョン取得を購読する
-     */
-    private fun subscribeTagVersion() {
-        bleStore.getVersionTag()
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                    currentVersion ->
-                // 最新FWがあるなら案内表示する
-                displayUpdateGuideUI(currentVersion)
-            }
-            .addTo(disposable)
-    }
+//    /**
+//     * FWバージョン取得を購読する
+//     */
+//    private fun subscribeTagVersion() {
+//        bleStore.getVersionTag()
+//            .filter{
+//                bleStore.getConnectedDevice().value !is DummyDevice
+//            }
+//            .observeOn(AndroidSchedulers.mainThread())
+//            .subscribe {
+//                    currentVersion ->
+//                // 最新FWがあるなら案内表示する
+//                displayUpdateGuideUI(currentVersion)
+//            }
+//            .addTo(disposable)
+//    }
 
-    /**
-     *  最新バージョンかチェックし、
-     *  最新でないならアップデートの案内表示
-     */
-    private fun displayUpdateGuideUI(currentVersion: CHResultState<String>) {
-        val zipName = bleStore.getConnectedDevice().value?.getFirZip()
-            ?.let { it1 -> resources.getResourceEntryName(it1) }
-        val tailTag = currentVersion.data.split("-").last()
-        val isLatest = (zipName?.contains(tailTag)) ?: return
-        if (!isLatest) {
-            setFirmWareUpdateListener()
-        } else {
-            // 最新の場合はUIも消しておく
-            binding.noticeUpdate.setOnClickListener(null)
-            binding.noticeUpdate.visibility = View.GONE
-        }
-    }
+//    /**
+//     *  最新バージョンかチェックし、
+//     *  最新でないならアップデートの案内表示
+//     */
+//    private fun displayUpdateGuideUI(currentVersion: CHResultState<String>) {
+//        val zipName = bleStore.getConnectedDevice().value?.getFirZip()
+//            ?.let { it1 -> resources.getResourceEntryName(it1) }
+//        val tailTag = currentVersion.data.split("-").last()
+//        val isLatest = (zipName?.contains(tailTag)) ?: return
+//        if (!isLatest) {
+//            setFirmWareUpdateListener()
+//        } else {
+//            // 最新の場合はUIも消しておく
+//            binding.noticeUpdate.setOnClickListener(null)
+//            binding.noticeUpdate.visibility = View.GONE
+//        }
+//    }
 
-    /**
-     *  最新バージョン確認の処理を追加する
-     */
-    private fun setFirmWareUpdateListener() {
-        binding.noticeUpdate.visibility = View.VISIBLE
-        binding.noticeUpdate.setOnClickListener {
-            showUpdateConfirmDialog(
-                getString(R.string.delete_confirm_title),
-                getString(R.string.update_confirm_text),
-                getString(R.string.update_confirm_text_ok)
-            )
-        }
-    }
+//    /**
+//     *  最新バージョン確認の処理を追加する
+//     */
+//    private fun setFirmWareUpdateListener() {
+//        binding.noticeUpdate.visibility = View.VISIBLE
+//        binding.noticeUpdate.setOnClickListener {
+//            showUpdateConfirmDialog(
+//                getString(R.string.delete_confirm_title),
+//                getString(R.string.update_confirm_text),
+//                getString(R.string.update_confirm_text_ok)
+//            )
+//        }
+//    }
 
     /**
      *  アップデートダイアログの表示
      *  YESなら更新開始のUI
      *  NOならダイアログを閉じる
      */
-    private fun showUpdateConfirmDialog(title:String,message: String,button: String) {
-        val alertDialogBuilder = AlertDialog.Builder(requireContext())
-        alertDialogBuilder.setTitle(title)
-        alertDialogBuilder.setMessage(message)
-        alertDialogBuilder.setPositiveButton(button) { _: DialogInterface, _: Int ->
-            bleStore.getConnectedDevice().value?.let {
-                bleActionCreator.updateFirmware(it)
-            }
-        }
-        alertDialogBuilder.setNegativeButton(getString(R.string.cancel)) { dialogInterface: DialogInterface, _: Int ->
-            dialogInterface.dismiss()
-        }
-        val alertDialog = alertDialogBuilder.create()
-        alertDialog.show()
-    }
+//    private fun showUpdateConfirmDialog(title:String,message: String,button: String) {
+//        val alertDialogBuilder = AlertDialog.Builder(requireContext())
+//        alertDialogBuilder.setTitle(title)
+//        alertDialogBuilder.setMessage(message)
+//        alertDialogBuilder.setPositiveButton(button) { _: DialogInterface, _: Int ->
+//            bleStore.getConnectedDevice().value?.let {
+//                bleActionCreator.updateFirmware(it)
+//            }
+//        }
+//        alertDialogBuilder.setNegativeButton(getString(R.string.cancel)) { dialogInterface: DialogInterface, _: Int ->
+//            dialogInterface.dismiss()
+//        }
+//        val alertDialog = alertDialogBuilder.create()
+//        alertDialog.show()
+//    }
 
     private fun setLockImageListener() {
-        binding.lockImage.setOnClickListener {
-            bleStore.getConnectedDevice().value
-                .let {
-                    if (it != null) {
-                        bleActionCreator.toggle(it)
-                    }
-                }
-         }
-
         bleStore.getConnectedDevice()
             .filter {
                 it != null && it !is DummyDevice
@@ -223,18 +217,28 @@ class ControlDeviceFragment : BaseFragment() {
 
     private fun createDeviceList() {
         bleStore.getRegisteredDevices().value?.let { devices ->
-            binding.spinner.adapter =
-                ArrayAdapter(
-                    requireContext(),
-                    R.layout.item_device,
-                    devices.map {
-                        it.deviceId?.let { it1 ->
-                            Log.d("BLE", "getDeviceName: $it")
-                            sharedPreferencesHelper.getDeviceName(it1)
-                        } ?: it.productModel.deviceModelName()
-                    }
-                )
-            binding.spinner.setSelection(sharedPreferencesHelper.getConnectIndex())
+                binding.spinner.adapter =
+                    ArrayAdapter(
+                        requireContext(),
+                        R.layout.item_device,
+                        devices.map {
+                            it.deviceId?.let { it1 ->
+                                Log.d("BLE", "getDeviceName: $it")
+                                sharedPreferencesHelper.getDeviceName(it1)
+                            } ?: it.productModel.deviceModelName()
+                        }
+                    )
+            //登録直後なら登録したデバイスを表示したい
+            if(bleStore.registerFlgRelay.value == true) {
+                if (devices != null) {
+                    selectedIndex = devices.size -1
+                }
+                binding.spinner.setSelection(selectedIndex)
+                bleStore.registerFlgRelay.accept(false)
+            } else {
+                binding.spinner.setSelection(sharedPreferencesHelper.getConnectIndex())
+            }
+
         }
     }
 

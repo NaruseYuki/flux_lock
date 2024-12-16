@@ -172,17 +172,16 @@ class BLEActivity : AppCompatActivity() {
             .observeOn(AndroidSchedulers.mainThread())
             .delay(500, TimeUnit.MILLISECONDS)
             .subscribe{
-                    if (it.isNotEmpty()) {
-                        // ControlDeviceFragmentを表示する
-                        // 全てのフラグメントをバックスタックから削除
-                        supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
-                        navigateFragment(R.id.container_main_fragment,ControlDeviceFragment())
-                    } else{
-                        // NoDevicesFragmentを表示する
-                        navigateFragment(R.id.container_main_fragment,NoDevicesFragment())
-                    }
+                // 全てのフラグメントをバックスタックから削除
+                supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+                if (it.isNotEmpty()) {
+                    // ControlDeviceFragmentを表示する
+                    navigateFragment(R.id.container_main_fragment,ControlDeviceFragment())
+                } else{
+                    // NoDevicesFragmentを表示する
+                    navigateFragment(R.id.container_main_fragment,NoDevicesFragment())
                 }
-                .addTo(disposables)
+            }.addTo(disposables)
     }
 
      fun navigateFragment(fragmentId:Int,fragment: Fragment) {

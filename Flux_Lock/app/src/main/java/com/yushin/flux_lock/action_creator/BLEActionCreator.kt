@@ -4,11 +4,13 @@ import android.util.Log
 import co.candyhouse.sesame.open.CHBleManager
 import co.candyhouse.sesame.open.CHBleManagerDelegate
 import co.candyhouse.sesame.open.CHDeviceManager
+import co.candyhouse.sesame.open.CHResultState
 import co.candyhouse.sesame.open.device.CHDeviceStatus
 import co.candyhouse.sesame.open.device.CHDeviceStatusDelegate
 import co.candyhouse.sesame.open.device.CHDevices
 import co.candyhouse.sesame.open.device.CHSesame2
 import co.candyhouse.sesame.open.device.CHSesame5
+import co.candyhouse.sesame.server.dto.CHEmpty
 import com.yushin.flux_lock.action.BLEAction
 import com.yushin.flux_lock.dispatcher.BLEDispatcher
 import com.yushin.flux_lock.exception.BaseException
@@ -241,70 +243,59 @@ class BLEActionCreator @Inject constructor (private val dispatcher: BLEDispatche
     }
 
     private fun registerSesame5(device: CHDevices) {
-        device.register {
+        device.register { it ->
             it.onSuccess {
-                // ↓ ログ出すだけ
-                dispatcher.dispatch(BLEAction.RegisterDevice(device))
-                attemptCnt = 0
-                //  登録成功
-                Log.d("BLE", "registerDevice: $it")
-                // 再読み込み
-                loadRegisteredDevices()
+                registerSuccess(device, it)
             }
             it.onFailure {
-                Log.d("BLE", "registerDevice failed: $it")
-                //  登録失敗
-                if (attemptCnt < REGISTER_MAX) {
-                    attemptCnt += 1
-                    Thread.sleep(100) //Busyになるため
-                    registerDevice(device)
-                } else {
-                    attemptCnt = 0
-                    // 接続済みなので初期化する
-                    resetLock(device)
-                    dispatcher.dispatch(
-                        BLEAction.ThrowException(
-                            BaseException.RegistrationException
-                        )
-                    )
-                }
+                registerFailure(it, device)
             }
         }
     }
 
     private fun registerSesame2(device: CHDevices) {
-        device.register {
+        device.register { it ->
             it.onSuccess {
-                // ↓ ログ出すだけ
-                dispatcher.dispatch(BLEAction.RegisterDevice(device))
-                attemptCnt = 0
-                //  登録成功
-                Log.d("BLE", "registerDevice: $it")
-                // 再読み込み
-                loadRegisteredDevices()
-
+                registerSuccess(device, it)
                 // SESAME2のみ初期角度登録する
                 startFirstSetting(device)
             }
             it.onFailure {
-                Log.d("BLE", "registerDevice failed: $it")
-                //  登録失敗
-                if (attemptCnt < REGISTER_MAX) {
-                    attemptCnt += 1
-                    Thread.sleep(100) //Busyになるため
-                    registerDevice(device)
-                } else {
-                    attemptCnt = 0
-                    // 接続済みなので初期化する
-                    resetLock(device)
-                    dispatcher.dispatch(
-                        BLEAction.ThrowException(
-                            BaseException.RegistrationException
-                        )
-                    )
-                }
+                registerFailure(it, device)
             }
         }
+    }
+
+    private fun registerFailure(it: Throwable, device: CHDevices) {
+        Log.d("BLE", "registerDevice failed: $it")
+        //  登録失敗
+        if (attemptCnt < REGISTER_MAX) {
+            attemptCnt += 1
+            Thread.sleep(100) //Busyになるため
+            registerDevice(device)
+        } else {
+            attemptCnt = 0
+            // 接続済みなので初期化する
+            resetLock(device)
+            dispatcher.dispatch(
+                BLEAction.ThrowException(
+                    BaseException.RegistrationException
+                )
+            )
+        }
+    }
+
+    private fun registerSuccess(
+        device: CHDevices,
+        it: CHResultState<CHEmpty>
+    ) {
+        // ↓ ログ出すだけ
+        dispatcher.dispatch(BLEAction.RegisterDevice(device))
+        attemptCnt = 0
+        //  登録成功
+        Log.d("BLE", "registerDevice: $it")
+        // 再読み込み
+        loadRegisteredDevices()
     }
 
     private fun subscribeDeviceStatus(device: CHDevices) {

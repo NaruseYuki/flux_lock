@@ -29,32 +29,33 @@ class BLEStore @Inject constructor(
 ) {
     // 未登録デバイス
     private val unRegisteredDevices = mutableListOf<CHDevices>()
-    private val unRegisteredSubject = BehaviorRelay.createDefault(unRegisteredDevices)
+    private val unRegisteredRelay = BehaviorRelay.createDefault(unRegisteredDevices)
 
     // 登録デバイス
     private val registeredDevices = mutableListOf<CHDevices>()
-    private val registeredSubject = BehaviorRelay.createDefault(registeredDevices)
-    private val registerCompleteSubject = BehaviorRelay.create<Unit>()
+    private val registeredRelay = BehaviorRelay.createDefault(registeredDevices)
+    private val registerCompleteRelay = BehaviorRelay.create<Unit>()
 
     // 接続デバイス
-    private val connectedSubject = BehaviorRelay.create<CHDevices?>()
+    private val connectedRelay = BehaviorRelay.create<CHDevices?>()
     private val connectionComplete = PublishRelay.create<Unit>()
+    val registerFlgRelay = BehaviorRelay.create<Boolean>()
 
     // 初期化処理結果
     private var deviceInitResetResult = PublishRelay.create<Boolean>()
     private var deviceInitDropKeyResult = PublishRelay.create<Unit>()
 
     // エラー通知
-    private val errorSubject = PublishRelay.create<BaseException>()
+    private val errorRelay = PublishRelay.create<BaseException>()
 
     // デバイスステータス
-    private var bleStatusSubject = BehaviorRelay.create<CHDeviceStatus>()
+    private var bleStatusRelay = BehaviorRelay.create<CHDeviceStatus>()
 
     // ローディング中フラグ
     private val loadingSubject = PublishSubject.create<Boolean>()
 
     // バージョンタグ
-    private val versionTagSubject = BehaviorRelay.create<CHResultState<String>>()
+    private val versionTagRelay = BehaviorRelay.create<CHResultState<String>>()
 
     //バージョンアップ完了
     private val versionUpComplete = PublishRelay.create<Unit>()
@@ -87,13 +88,14 @@ class BLEStore @Inject constructor(
             is BLEAction.GetVersionTag -> getVersionTag(action.status)
             is BLEAction.ThrowException -> throwError(action.exception)
             is BLEAction.FirmwareVersionUpComplete -> firmwareVersionUpComplete()
+            else ->{}
         }
     }
 
     private fun disconnectDevice(device: CHDevices) {
         // nullを入れると例外エラーが投げられるので、切断時はdummyを入れておく
         val dummy:CHDevices = DummyDevice()
-        connectedSubject.accept(dummy)
+        connectedRelay.accept(dummy)
         Log.d("BLE", "disconnect: $device")
     }
 
@@ -104,30 +106,31 @@ class BLEStore @Inject constructor(
     private fun loadRegisteredDevices(devices:List<CHDevices>) {
         registeredDevices.clear()
         registeredDevices.addAll(devices)
-        registeredSubject.accept(registeredDevices)
+        registeredRelay.accept(registeredDevices)
     }
 
     private fun loadUnregisteredDevices(devices:List<CHDevices>) {
         unRegisteredDevices.clear()
         unRegisteredDevices.addAll(devices)
-        unRegisteredSubject.accept(unRegisteredDevices)
+        unRegisteredRelay.accept(unRegisteredDevices)
     }
 
     private fun registerDevice(device: CHDevices) {
         //登録成功したデバイスをストアに反映する
-        registerCompleteSubject.accept(Unit)
+        registerFlgRelay.accept(true)
+        registerCompleteRelay.accept(Unit)
         Log.d("BLE", "registerDevice: $device")
     }
 
     private fun checkDeviceStatus(device: CHDevices) {
-        connectedSubject.accept(device)
-        Log.d("BLE", "@@@_$connectedSubject")
+        connectedRelay.accept(device)
+        Log.d("BLE", "@@@_$connectedRelay")
     }
 
     private fun connectDevice(device: CHDevices) {
-        connectedSubject.accept(device)
+        connectedRelay.accept(device)
         connectionComplete.accept(Unit)
-        Log.d("BLE", "@@@_$connectedSubject")
+        Log.d("BLE", "@@@_$connectedRelay")
 
     }
 
@@ -151,7 +154,7 @@ class BLEStore @Inject constructor(
     }
 
     private fun changeBleStatus(status: CHDeviceStatus) {
-        bleStatusSubject.accept(status)
+        bleStatusRelay.accept(status)
     }
 
     private fun reset(result: Boolean) {
@@ -167,13 +170,13 @@ class BLEStore @Inject constructor(
     private fun dropKey(device: CHDevices) {
         //登録成功したデバイスをストアに反映する
         registeredDevices.remove(device)
-        registeredSubject.accept(registeredDevices)
-        connectedSubject.accept(DummyDevice())
+        registeredRelay.accept(registeredDevices)
+        connectedRelay.accept(DummyDevice())
         deviceInitDropKeyResult.accept(Unit)
     }
 
     private fun getVersionTag(status: CHResultState<String>) {
-        versionTagSubject.accept(status)
+        versionTagRelay.accept(status)
     }
 
     private fun firmwareVersionUpComplete(){
@@ -182,22 +185,22 @@ class BLEStore @Inject constructor(
 
     private fun throwError(error:BaseException){
         Log.d("BLE", "throwError: ${error.message}")
-        errorSubject.accept(error)
+        errorRelay.accept(error)
     }
 
     // 未登録デバイスのリストを取得する
-    fun getUnregisteredDevices(): BehaviorRelay<MutableList<CHDevices>> = unRegisteredSubject
+    fun getUnregisteredDevices(): BehaviorRelay<MutableList<CHDevices>> = unRegisteredRelay
 
     // 登録デバイスのリストを取得する
-    fun getRegisteredDevices(): BehaviorRelay<MutableList<CHDevices>> = registeredSubject
+    fun getRegisteredDevices(): BehaviorRelay<MutableList<CHDevices>> = registeredRelay
 
     // 接続デバイスを取得する
-    fun getConnectedDevice() = connectedSubject
+    fun getConnectedDevice() = connectedRelay
 
     // 接続が完了したことを通知する
     fun getConnectionComplete() = connectionComplete
 
-    fun getError() = errorSubject
+    fun getError() = errorRelay
 
     // デバイスの初期化が完了した
     fun getDeviceInitResult() = Observable.zip(
@@ -207,11 +210,11 @@ class BLEStore @Inject constructor(
         resetResult // dropKeyResult を無視
     }
 
-    fun getRegisterCompleteSubject() = registerCompleteSubject
+    fun getRegisterCompleteRelay() = registerCompleteRelay
 
-    fun getBleStatus() = bleStatusSubject
+    fun getBleStatus() = bleStatusRelay
 
-    fun getVersionTag() = versionTagSubject
+    fun getVersionTag() = versionTagRelay
 
     fun getVersionUpComplete() = versionUpComplete
 }
