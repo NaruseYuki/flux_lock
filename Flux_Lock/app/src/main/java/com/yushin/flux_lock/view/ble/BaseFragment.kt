@@ -128,7 +128,7 @@ open class BaseFragment : Fragment() {
                         showAppEndDialog(getString(R.string.end_app_text))
                     else -> {}
                 }
-            }
+            }.addTo(disposable)
     }
 
     private fun showAppEndDialog(message:String) {
